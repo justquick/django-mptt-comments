@@ -1,0 +1,27 @@
+    {% load markup %}
+    {% load mptt_tags %}
+    {% load mptt_comments_tags %}
+    
+    <div class="comment" id="comment_{{comment.pk}}">
+    
+    <h3>{% trans "Commented by" %} {{ comment.name }} -
+        {{ comment.submit_date|date:"l" }} {% trans "on" %}
+        {{ comment.submit_date|date:"j F" }} {% trans "at" %}
+        {{ comment.submit_date|date:"H:i" }}:
+    </h3>
+    
+    <p>{{ comment.comment|markdown }}</p>
+    
+    <p>{{ comment|children_count }} {% trans "replies" %} | 
+        <span class="comment_reply" id="comment_reply_{{comment.pk}}">
+            {% trans "Reply to this comment" %}
+        </span>
+    </p>
+    
+    <script type="text/javascript">
+        comments['comment_reply_{{comment.pk}}'] = {
+            parent_pk: {{ comment.pk }},
+            object_pk: {{ object.pk }},
+            content_type: '{{ comment.content_type.app_label }}.{{ comment.content_type.model }}'
+        }
+    </script>

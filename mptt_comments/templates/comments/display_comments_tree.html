@@ -1,0 +1,35 @@
+    {% load markup %}
+    {% load i18n %}
+    {% load mptt_tags %}
+    {% load mptt_comments_tags %}
+    
+    {% for comment, tree in comments|tree_info %}
+    
+    {% if tree.new_level %}<div class="comment" id="comment_{{comment.pk}}">{% else %}</div>{% endif %}
+    
+    <h3>{% trans "Commented by" %} {{ comment.name }} -
+        {{ comment.submit_date|date:"l" }} {% trans "on" %}
+        {{ comment.submit_date|date:"j F" }} {% trans "at" %}
+        {{ comment.submit_date|date:"H:i" }}:
+    </h3>
+    
+    <p>{{ comment.comment|markdown }}</p>
+    
+    <p>{{ comment|children_count }} {% trans "replies" %} | 
+        <span class="comment_reply" id="comment_reply_{{comment.pk}}">
+            {% trans "Reply to this comment" %}
+        </span>
+    </p>
+    
+    <script type="text/javascript">
+        comments['comment_reply_{{comment.pk}}'] = {
+            parent_pk: {{ comment.pk }},
+            object_pk: {{ object.pk }},
+            content_type: '{{ comment.content_type.app_label }}.{{ comment.content_type.model }}'
+        }
+    </script>
+   
+   {# remove the last level using slice #} 
+   {% for level in tree.closed_levels|slice:"1:" %}</div>{% endfor %}
+   
+   {% endfor %}   
