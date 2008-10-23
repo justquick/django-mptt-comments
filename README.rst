@@ -16,7 +16,7 @@ Installation
 
 #. Add the required code to the objects detail page
 
-#. Copy the templates to adapd them for your site
+#. Copy the templates to adapt them for your site
 
 #. Style the forms using css
 
