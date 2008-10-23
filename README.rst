@@ -3,16 +3,17 @@ Django Mptt Comments
 ====================
 
 Django Mptt Comments is a simple way to display threaded comments instead of the django contrib comments.
-Currently, there is only support for openlayers with a google baselayer, but should be easy to extend.
-
-If you have ideas for this app tell me or make a fork.
 
 Installation
 ============
 
+#. Get the required third party `mptt` module `svn checkout http://django-mptt.googlecode.com/svn/trunk/mptt`
+
 #. Add the `mptt_comments` directory to your Python path.
 
-#. Add `mptt_comments` to INSTALLED_APPS
+#. Add `mptt_comments` and the other required apps (`django.contrib.comments` , `django.contrib.markup`, `mptt`) to INSTALLED_APPS
+
+#. Add `mptt_comments.urls` to your projects urlconf
 
 #. Add the required code to the objects detail page
 
@@ -22,6 +23,10 @@ Installation
 
 Usage
 =====
+
+Add the urls to your projects urls ::
+
+        (r'^comments/', include('mptt_comments.urls')),
 
 In any detail template that wants to use `mptt_comments` ::
         
