@@ -1,4 +1,4 @@
-
+        
     {% load comments %}
     {% load i18n %}
 
@@ -23,7 +23,9 @@
                         {{ field }}
                     {% endif %}
                 {% endfor %}
+                {% if allow_post %}
                   <input type="submit" name="submit" class="submit-post" value="{% trans "Post" %}">
+                {% endif %}
                   <input type="submit" name="preview" class="submit-preview" value="{% trans "Preview" %}">
                 </li>
             </ol>

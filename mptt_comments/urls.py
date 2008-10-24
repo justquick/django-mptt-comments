@@ -3,14 +3,21 @@ from django.contrib.comments.urls import urlpatterns as contrib_comments_urlpatt
 from django.conf import settings
 
 urlpatterns = patterns('mptt_comments.views',
-    url(r'^initial_form/$',
-        'post_comment',
-        kwargs={'get_initial_form': True},
-        name='comments-initial_form'
+    url(r'^new/(\d+)/$',
+        'new_comment',
+        name='new-comment'
+    ),
+    url(r'^reply/(\d+)/$',
+        'new_comment',
+        name='comment-reply'
     ),
     url(r'^post/$',
         'post_comment',
         name='comments-post-comment'
+    ),
+    url(r'^posted-ajax/$',
+        'comment_done_ajax',
+        name='comments-comment-done-ajax'
     )
 )
 

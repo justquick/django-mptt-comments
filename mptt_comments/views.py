@@ -1,6 +1,7 @@
+import textwrap
 from django import http
 from django.conf import settings
-from django.contrib.comments.views.utils import next_redirect, confirmation_view
+from django.contrib.comments.views.utils import next_redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import render_to_response
@@ -9,7 +10,7 @@ from django.template.loader import render_to_string
 from django.utils.html import escape
 import mptt_comments
 from django.contrib.comments import signals
-from django.contrib.comments.models import Comment
+from mptt_comments.models import MpttComment
 from django.utils import datastructures
 
 class CommentPostBadRequest(http.HttpResponseBadRequest):
@@ -23,7 +24,34 @@ class CommentPostBadRequest(http.HttpResponseBadRequest):
         if settings.DEBUG:
             self.content = render_to_string("comments/400-debug.html", {"why": why})
 
-def post_comment(request, next=None, get_initial_form=None):
+def new_comment(request, comment_id=None):
+    
+    is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
+    
+    if not comment_id:
+        return CommentPostBadRequest("Missing comment id.")
+        
+    parent_comment = MpttComment.objects.get(pk=comment_id)
+    
+    target = parent_comment.content_object
+    model = target.__class__
+    
+    # Construct the initial comment form
+    form = mptt_comments.get_form()(target, parent_comment=parent_comment)
+        
+    template_list = [
+        "comments/%s_%s_new_form%s.html" % tuple(str(model._meta).split(".") + [is_ajax]),
+        "comments/%s_new_form%s.html" % (model._meta.app_label, is_ajax),
+        "comments/new_form%s.html" % is_ajax,
+    ]
+    return render_to_response(
+        template_list, {
+            "form" : form,
+        }, 
+        RequestContext(request, {})
+    )
+        
+def post_comment(request, next=None):
     """
     Post a comment.
 
@@ -34,10 +62,12 @@ def post_comment(request, next=None, get_initial_form=None):
     # Require POST
     if request.method != 'POST' and not get_initial_form:
         return http.HttpResponseNotAllowed(["POST"])
+        
+    is_ajax = request.POST.get('is_ajax') and '_ajax' or ''
 
     # Fill out some initial data fields from an authenticated user, if present
-    data = datastructures.MultiValueDict()
-    data.update(request.REQUEST)
+    data = request.POST.copy()
+
     if request.user.is_authenticated():
         if not data.get('name', ''):
             data["name"] = request.user.get_full_name()
@@ -55,7 +85,7 @@ def post_comment(request, next=None, get_initial_form=None):
         model = models.get_model(*ctype.split(".", 1))
         target = model._default_manager.get(pk=object_pk)
         if parent_pk:
-            parent_comment = Comment.objects.get(pk=parent_pk)
+            parent_comment = MpttComment.objects.get(pk=parent_pk)
     except TypeError:
         return CommentPostBadRequest(
             "Invalid content_type value: %r" % escape(ctype))
@@ -63,7 +93,7 @@ def post_comment(request, next=None, get_initial_form=None):
         return CommentPostBadRequest(
             "The given content-type %r does not resolve to a valid model." % \
                 escape(ctype))
-    except Comment.DoesNotExist:
+    except MpttComment.DoesNotExist:
         return CommentPostBadRequest(
             "Parent comment with PK %r does not exist." % \
                 escape(parent_pk))
@@ -75,24 +105,6 @@ def post_comment(request, next=None, get_initial_form=None):
     # Do we want to preview the comment?
     preview = data.get("submit", "").lower() == "preview" or \
               data.get("preview", None) is not None
-
-    # Get a initial form with content_type, object_pk and parent_pk filled
-    if get_initial_form:
-        
-        # Construct the initial comment form
-        form = mptt_comments.get_form()(target, parent_comment=parent_comment)
-        
-        template_list = [
-            "comments/%s_%s_initial_form.html" % tuple(str(model._meta).split(".")),
-            "comments/%s_initial_form.html" % model._meta.app_label,
-            "comments/initial_form.html",
-        ]
-        return render_to_response(
-            template_list, {
-                "form" : form,
-            }, 
-            RequestContext(request, {})
-        )
         
     # Construct the comment form 
     form = mptt_comments.get_form()(target, parent_comment=parent_comment, data=data)
@@ -106,14 +118,15 @@ def post_comment(request, next=None, get_initial_form=None):
     # If there are errors or if we requested a preview show the comment
     if form.errors or preview:
         template_list = [
-            "comments/%s_%s_preview.html" % tuple(str(model._meta).split(".")),
-            "comments/%s_preview.html" % model._meta.app_label,
-            "comments/preview.html",
+            "comments/%s_%s_preview%s.html" % tuple(str(model._meta).split(".") + [is_ajax]),
+            "comments/%s_preview%s.html" % (model._meta.app_label, is_ajax),
+            "comments/preview%s.html" % is_ajax
         ]
         return render_to_response(
             template_list, {
                 "comment" : form.data.get("comment", ""),
                 "form" : form,
+                "allow_post": not form.errors
             }, 
             RequestContext(request, {})
         )
@@ -143,14 +156,49 @@ def post_comment(request, next=None, get_initial_form=None):
         comment = comment,
         request = request
     )
+    
+    return next_redirect(data, next, 'comments-comment-done%s' % (is_ajax and '-ajax' or ''), c=comment._get_pk_val())
+    
+def confirmation_view(template, doc="Display a confirmation view."):
+    """
+    Confirmation view generator for the "comment was
+    posted/flagged/deleted/approved" views.
+    """
+    def confirmed(request):
+        comment = None
+        if 'c' in request.GET:
+            try:
+                comment = mptt_comments.get_model().objects.get(pk=request.GET['c'])
+            except ObjectDoesNotExist:
+                pass
+        return render_to_response(template,
+            {'comment': comment},
+            context_instance=RequestContext(request)
+        )
 
-    return next_redirect(data, next, 'comments-comment-done', c=comment._get_pk_val())
+    confirmed.__doc__ = textwrap.dedent("""\
+        %s
+
+        Templates: `%s``
+        Context:
+            comment
+                The posted comment
+        """ % (doc, template)
+    )
+    return confirmed
+    
+comment_done_ajax = confirmation_view(
+    template = "comments/posted_ajax.html",
+    doc = """Display a "comment was posted" success page."""
+)
 
 comment_done = confirmation_view(
     template = "comments/posted.html",
     doc = """Display a "comment was posted" success page."""
 )
 
+
+    
 def get_comment_tree(request, object_list):
 
     json_comments = {'end_level': object_list[-1].level, 'end_pk': object_list[-1].pk}

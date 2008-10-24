@@ -2,11 +2,14 @@
     {% load i18n %}
     {% load mptt_tags %}
     {% load mptt_comments_tags %}
-    
+    {% load comparison %}
+ 
     {% for comment, tree in comments|tree_info %}
     
-    {% if tree.new_level %}<div class="comment" id="comment_{{comment.pk}}">{% else %}</div>{% endif %}
+    {% if not tree.new_level %}</div>{% endif %}
     
+    <div class="comment" id="comment_{{comment.pk}}">
+        
     <h3>{% trans "Commented by" %} {{ comment.name }} -
         {{ comment.submit_date|date:"l" }} {% trans "on" %}
         {{ comment.submit_date|date:"j F" }} {% trans "at" %}
@@ -16,20 +19,20 @@
     <p>{{ comment.comment|markdown }}</p>
     
     <p>{{ comment|children_count }} {% trans "replies" %} | 
-        <span class="comment_reply" id="comment_reply_{{comment.pk}}">
+        <a class="comment_reply" href="{% url comment-reply comment.pk %}">
             {% trans "Reply to this comment" %}
-        </span>
+        </a>
     </p>
-    
-    <script type="text/javascript">
-        comments['comment_reply_{{comment.pk}}'] = {
-            parent_pk: {{ comment.pk }},
-            object_pk: {{ object.pk }},
-            content_type: '{{ comment.content_type.app_label }}.{{ comment.content_type.model }}'
-        }
-    </script>
    
-   {# remove the last level using slice #} 
-   {% for level in tree.closed_levels|slice:"1:" %}</div>{% endfor %}
+   {% for level in tree.closed_levels %}
+   
+        {% if forloop.parentloop.last %}
+            {# not the topmost tree, skip closing one level #}  
+            {% if_greater forloop.counter0 0 %}</div>{% endif_greater %}
+        {% else %}
+            </div>
+        {% endif %}
+        
+   {% endfor %}
    
    {% endfor %}   

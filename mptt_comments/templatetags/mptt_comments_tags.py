@@ -1,5 +1,6 @@
 from django.contrib.comments.templatetags.comments import BaseCommentNode, CommentListNode
 from django import template
+from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 import mptt_comments
 
@@ -30,15 +31,20 @@ class MpttCommentFormNode(BaseMpttCommentNode):
         return ''
 
 class MpttCommentListNode(BaseMpttCommentNode):
-    
 
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
         root_node = self.get_root_node(context)
-        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=3).order_by('tree_id', 'lft')[:50]
+        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=3).order_by('tree_id', 'lft')
         
     def get_context_value_from_queryset(self, context, qs):
-        return list(qs)    
+        return list(qs)
+        
+    def render(self, context):
+        qs = self.get_query_set(context)
+        context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
+        context['root_comment'] = self.get_root_node(context)
+        return ''        
         
 def get_mptt_comment_list(parser, token):
     """
@@ -88,37 +94,28 @@ def children_count(comment):
     return (comment.rght - comment.lft) / 2
 
 def mptt_comments_media():
-    jquery = '<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>'
-    jscode = '''
-    <script type="text/javascript">
+
+    return mark_safe( render_to_string( ('comments/comments_media.html',) , { }) )
     
-    var comments = {}
-    $(document).ready(function(){
-            
-        $('.comment_reply').each(function() {
-            var post_data = comments[this.id]
-            var reply_link = $(this)
-            $(this).bind("click", function(e) {
-                $('.comment form').remove()
-                $.post('/comments/initial_form/', post_data, function(data, textStatus){
-                    var parent = reply_link.parent()
-                    parent.after(data)
-                }, "html")
-            })
-        })
-    })
-    </script>
-    '''
-    css = '''
-    <style type="text/css">
-        .comment_reply { text-decoration: underline; cursor: hand; }
-        .comment { margin-left: 0.5em; padding-left: 0.5em; border-left: solid 4px #dddddd; }
-    </style>
-    '''
-    return mark_safe(u'%s%s%s' % (jquery, jscode, css))
+def display_comment_toplevel_for(target):
+
+    model = target.__class__
+        
+    template_list = [
+        "comments/%s_%s_display_comments_toplevel.html" % tuple(str(model._meta).split(".")),
+        "comments/%s_display_comments_toplevel.html" % model._meta.app_label,
+        "comments/display_comments_toplevel.html"
+    ]
+    return render_to_string(
+        template_list, {
+            "object" : target
+        } 
+        # RequestContext(context['request'], {})
+    )
     
 register.filter(children_count)
 register.tag(get_mptt_comment_form)
 register.simple_tag(mptt_comment_form_target)
 register.simple_tag(mptt_comments_media)
 register.tag(get_mptt_comment_list)
+register.simple_tag(display_comment_toplevel_for)
