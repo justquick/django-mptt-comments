@@ -3,6 +3,15 @@
     <script type="text/javascript">
     
     var comments_loaded = []
+    var replies_loaded = []
+    
+    function is_in(list, item) {
+        for (var i=0;i<list.length;i++) {
+            if (list[i] == item) return true
+        }
+        return false
+    }    
+    
     $(document).ready(function(){
 
         var comment_level_re = new RegExp("comment_level_(\\d+)", "")
@@ -92,6 +101,39 @@
                     return false
                 })
             })
+            
+                            
+            $('.comment_replies').each(function() {
+            
+                var replies_link = $(this)    
+                
+                replies_link.bind("click", function(e) {
+                    
+                    var href = replies_link.attr('href')
+                    
+                    var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
+                    
+                    if (!is_in(replies_loaded, id)) {
+                    
+                        $.get($(this).attr('href') + '?is_ajax=1', {}, function(data, textStatus){
+                            
+                            var comments_tree = data.comments_tree
+                            
+                            if (comments_tree) {
+                                $('#' + id).append(comments_tree.html)
+                            }
+                            
+                            repopulate_loaded_comments()
+                            bind_replies()
+                                
+                        }, "json")
+                        
+                        replies_loaded.push(id)
+                    }
+                    return false
+                })
+            })
+            
         }
         
         $('#comments_more').bind("click", function() {

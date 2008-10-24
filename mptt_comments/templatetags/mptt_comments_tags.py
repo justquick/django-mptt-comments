@@ -33,11 +33,12 @@ class MpttCommentFormNode(BaseMpttCommentNode):
 class MpttCommentListNode(BaseMpttCommentNode):
 
     limit = 5
-
+    cutoff_level = 3
+    
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
         root_node = self.get_root_node(context)
-        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=3).order_by('tree_id', 'lft')
+        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level).order_by('tree_id', 'lft')
         
     def get_context_value_from_queryset(self, context, qs):
         return list(qs[:self.limit])
@@ -47,6 +48,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
         context['comments_remaining'] = self.get_query_set(context).count() - self.limit
         context['root_comment'] = self.get_root_node(context)
+        context['cutoff_level'] = self.cutoff_level
         return ''        
         
 def get_mptt_comment_list(parser, token):

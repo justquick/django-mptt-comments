@@ -13,10 +13,19 @@
     
     <p>{{ comment.comment|markdown }}</p>
     
-    <p>{{ comment|children_count }} {% trans "replies" %} | 
+    <p>
+        {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
+            <a class="comment_replies" href="{% url comments-subtree comment.pk %}">
+        {% endifequal %}{% endif %}
+            {{ comment|children_count }} {% trans "replies" %}
+        {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
+            </a>
+        {% endifequal %}{% endif %}            
+            | 
         <a class="comment_reply" href="{% url comment-reply comment.pk %}">
             {% trans "Reply to this comment" %}
         </a>
     </p>
+   
     
     </div>

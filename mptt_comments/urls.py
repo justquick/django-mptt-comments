@@ -22,6 +22,10 @@ urlpatterns = patterns('mptt_comments.views',
     url(r'^more/(\d+)/$',
         'comments_more',
         name='comments-more'
+    ),
+    url(r'^get/(\d+)/$',
+        'comments_subtree',
+        name='comments-subtree'
     )
 )
 
