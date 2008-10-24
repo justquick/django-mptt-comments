@@ -2,10 +2,31 @@
 
     <script type="text/javascript">
     
-    var comments = {}
+    var comments_loaded = []
     $(document).ready(function(){
+
+        var comment_level_re = new RegExp("comment_level_(\\d+)", "")
+        var comment_pk_re = new RegExp("comment_(\\d+)", "")
         
         var posted_re = new RegExp("this_is_a_comment", "g")
+
+        function repopulate_loaded_comments() {
+            
+            comments_loaded = []
+            
+            $('.comment').each(function(){                 
+                
+                var classes = $(this).attr('class')
+                var id = $(this).attr('id')
+                
+                var pk = parseInt(comment_pk_re.exec(id)[1])
+                var level = parseInt(comment_level_re.exec(classes)[1])
+                
+                comments_loaded.push({id: id, pk: pk, level: level})
+                
+            })
+            
+        }
         
         function bind_submit(form, nxt) {
         
@@ -73,8 +94,56 @@
             })
         }
         
-        bind_replies() // intercept links
+        $('#comments_more').bind("click", function() {
+            
+            repopulate_loaded_comments()
+            
+            $.get($(this).attr('href') + '?is_ajax=1', {}, function(data, textStatus){
+                
+                var comments_for_update = data.comments_for_update
+                
+                if (comments_for_update) {
+                    for (var c=0;c<comments_for_update.length;c++){
+                        var append_to_id = ''
+                        var comment = comments_for_update[c]
+                        for (var l=0;l<comments_loaded.length;l++) {
+                            var loaded_comment = comments_loaded[l]
+                            if (comment.level-1 == loaded_comment.level) append_to_id = loaded_comment.id
+                        }
+                        $('#' + append_to_id).append(comment.html)
+                        comments_loaded.push({id: 'comment_' + comment.pk, pk: comment.pk, level: comment.level})
+                    }
+                }
+                
+                var comments_tree = data.comments_tree
+                
+                if (comments_tree) {
+                    $('#mptt-comments-tree').append(comments_tree.html)
+                }
+                
+                repopulate_loaded_comments()
+                
+                var remaining_count = data.remaining_count
+                if (remaining_count>0) {
+                    $('#comments_more_remaining').html(remaining_count)
+                    
+                    var old_href = $('#comments_more').attr('href')
+                    
+                    $('#comments_more').attr('href', 
+                        old_href.replace(new RegExp("\\d+/$"), comments_loaded[comments_loaded.length-1].pk + '/')
+                    )
+                }
+                else {
+                     $('#comments_more').hide()
+                }
+                bind_replies()
+                
+            }, "json")
+            
+            return false
+        })
         
+        bind_replies() // intercept links
     })
     </script>
     

@@ -3,12 +3,12 @@
     {% load mptt_tags %}
     {% load mptt_comments_tags %}
     {% load comparison %}
- 
+
     {% for comment, tree in comments|tree_info %}
     
     {% if not tree.new_level %}</div>{% endif %}
     
-    <div class="comment" id="comment_{{comment.pk}}">
+    <div class="comment comment_level_{{ comment.level }}" id="comment_{{ comment.pk }}">
         
     <h3>{% trans "Commented by" %} {{ comment.name }} -
         {{ comment.submit_date|date:"l" }} {% trans "on" %}

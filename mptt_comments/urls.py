@@ -18,6 +18,10 @@ urlpatterns = patterns('mptt_comments.views',
     url(r'^posted-ajax/$',
         'comment_done_ajax',
         name='comments-comment-done-ajax'
+    ),
+    url(r'^more/(\d+)/$',
+        'comments_more',
+        name='comments-more'
     )
 )
 

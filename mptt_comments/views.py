@@ -11,7 +11,8 @@ from django.utils.html import escape
 import mptt_comments
 from django.contrib.comments import signals
 from mptt_comments.models import MpttComment
-from django.utils import datastructures
+from django.utils import datastructures, simplejson
+
 
 class CommentPostBadRequest(http.HttpResponseBadRequest):
     """
@@ -199,42 +200,48 @@ comment_done = confirmation_view(
 
 
     
-def get_comment_tree(request, object_list):
+def comment_tree_json(request, object_list, tree_id):
+    
+    if object_list:
+        json_comments = {'end_level': object_list[-1].level, 'end_pk': object_list[-1].pk}
+          
+        template_list = [
+            "comments/display_comments_tree.html",
+        ]
+        json_comments['html'] = render_to_string(
+            template_list, {
+                "comments" : object_list
+            }, 
+            RequestContext(request, {})
+        )
+        
+        return json_comments
+    return {}
 
-    json_comments = {'end_level': object_list[-1].level, 'end_pk': object_list[-1].pk}
+def comments_more(request, from_comment_pk):
     
-    template_list = [
-        "comments/display_comments_tree.html",
-    ]
-    json_comments['html'] = render_to_string(
-        template_list, {
-            "comments" : object_list
-        }, 
-        RequestContext(request, {})
-    )
+    offset = int(request.GET.get('offset', 5))
     
-    return json_comments
-
-def get_comment_offset(request):
+    comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
+         
+    qs = MpttComment.objects.filter(tree_id=comment.tree_id, lft__gte=comment.lft+1, level__gte=1, level__lte=3).order_by('tree_id', 'lft')
     
-    offset = int(request.GET.get('offset', 10))
-    c_pk = request.GET.get('c_id')
-    
-    comment = MpttComment.objects.select_related('content_type').get(pk=c_pk)    
-    qs = MpttComment.objects.filter(tree_id=tree_id, lft__gte=comment.lft+1)[:offset]
-    
-    until_toplelvel = []
+    until_toplevel = []
     remaining = []
     toplevel_reached = False
-    for comment in qs:
-        if comment.level == 0:
+    remaining_count = qs.count() - offset
+    
+    for comment in qs[:offset]:
+        
+        if comment.level == 1:
             toplevel_reached = True
+            
         if toplevel_reached:
             remaining.append(comment)
         else:
             until_toplevel.append(comment)
     
-    json_data = {'comments_for_update': [], 'comment_tree': {} }
+    json_data = {'remaining_count': remaining_count, 'comments_for_update': [], 'comments_tree': {} }
     
     for comment in until_toplevel:    
         json_comment = {'level': comment.level, 'pk': comment.pk}
@@ -249,8 +256,8 @@ def get_comment_offset(request):
         )
         json_data['comments_for_update'].append(json_comment)
         
-    json_data['comment_tree'] = get_comment_tree(request, remaining)
+    json_data['comments_tree'] = comment_tree_json(request, remaining, comment.tree_id)
     
-    return HttpResponse(simplejson.dumps(json_data), mimetype='text/javascript')
+    return http.HttpResponse(simplejson.dumps(json_data), mimetype='text/javascript')
     
         

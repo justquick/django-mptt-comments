@@ -28,6 +28,9 @@ class MpttComment(Comment):
     
     parent = models.ForeignKey('self', related_name='children', blank=True, null=True)
     
+    class Meta:
+        ordering = ('tree_id', 'lft')
+    
     objects = MpttCommentManager()
 
 mptt.register(MpttComment)

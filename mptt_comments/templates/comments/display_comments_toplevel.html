@@ -3,11 +3,20 @@
 
 {% get_mptt_comment_list for object as comments %}
 {% if comments %}<h2>{% trans "Comments" %}</h2>{% endif %}
-
+ 
+<div id="mptt-comments-tree">
+        
 {% include "comments/display_comments_tree.html" %}    
-    
-{% with comments|last as comment %}
-{% endwith %}
+       
+</div>
 
-<p><a class="comment_new" href="{% url new-comment root_comment.pk %}">{% trans "Post a new comment" %}</a></p>
-   
+<p>
+    {% if comments_remaining %}
+    {% with comments|last as last_comment %}
+    <a id="comments_more" href="{% url comments-more last_comment.pk %}">
+        {% trans "Get" %} <span id="comments_more_remaining">{{ comments_remaining }}</span> {% trans "more comments" %}
+    </a> |
+    {% endwith %}
+    {% endif %}
+    <a class="comment_new" href="{% url new-comment root_comment.pk %}">{% trans "Post a new comment" %}</a>
+</p>
