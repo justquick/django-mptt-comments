@@ -34,7 +34,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
 
     limit = 5
     cutoff_level = 3
-    bottom_level = 1
+    bottom_level = 0 
     
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
