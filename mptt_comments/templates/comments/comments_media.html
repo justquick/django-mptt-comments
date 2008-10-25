@@ -120,10 +120,8 @@
                             var comments_tree = data.comments_tree
 
                             if (comments_tree) {  // 
-                                $('#' + id).append( '<div>' + comments_tree.html + '</div>' )
+                                $('#' + id).append( comments_tree.html )
                             }
-                            
-                            repopulate_loaded_comments()
                             
                             bind_replies()
                                 
