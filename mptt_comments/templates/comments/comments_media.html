@@ -118,9 +118,7 @@
                         $.get($(this).attr('href') + '?is_ajax=1', {}, function(data, textStatus){
                             
                             var comments_tree = data.comments_tree
-                            
-                            $('#outer').append('<textarea>' + comments_tree.html + '</textarea>')
-                            
+
                             if (comments_tree) {  // 
                                 $('#' + id).append( '<div>' + comments_tree.html + '</div>' )
                             }
