@@ -200,7 +200,7 @@ comment_done = confirmation_view(
 
 
     
-def comment_tree_json(request, object_list, tree_id, cutoff_level):
+def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level):
     
     if object_list:
         json_comments = {'end_level': object_list[-1].level, 'end_pk': object_list[-1].pk}
@@ -211,7 +211,8 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level):
         json_comments['html'] = render_to_string(
             template_list, {
                 "comments" : object_list,
-                "cutoff_level": cutoff_level
+                "cutoff_level": cutoff_level,
+                "bottom_level": bottom_level
             }, 
             RequestContext(request, {})
         )
@@ -222,10 +223,13 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level):
 def comments_more(request, from_comment_pk):
     
     offset = int(request.GET.get('offset', 5))
-    cutoff_level = 3
-    
+
+
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
-         
+    
+    cutoff_level = 3
+    bottom_level = -1
+             
     qs = MpttComment.objects.filter(
         tree_id=comment.tree_id,
         lft__gte=comment.lft+1,
@@ -264,15 +268,16 @@ def comments_more(request, from_comment_pk):
         )
         json_data['comments_for_update'].append(json_comment)
         
-    json_data['comments_tree'] = comment_tree_json(request, remaining, comment.tree_id, cutoff_level)
+    json_data['comments_tree'] = comment_tree_json(request, remaining, comment.tree_id, cutoff_level, bottom_level)
     
-    return http.HttpResponse(simplejson.dumps(json_data), mimetype='text/javascript')
+    return http.HttpResponse(simplejson.dumps(json_data), mimetype='application/json')
     
 def comments_subtree(request, from_comment_pk):
     
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)     
     
     cutoff_level = comment.level+3
+    bottom_level = comment.level
     
     qs = MpttComment.objects.filter(
         tree_id=comment.tree_id, 
@@ -284,6 +289,6 @@ def comments_subtree(request, from_comment_pk):
     remaining_count = qs.count() 
     
     json_data = {'remaining_count': remaining_count, 'comments_for_update': [], 'comments_tree': {} }
-    json_data['comments_tree'] = comment_tree_json(request, list(qs), comment.tree_id, cutoff_level)
+    json_data['comments_tree'] = comment_tree_json(request, list(qs), comment.tree_id, cutoff_level, bottom_level)
     
-    return http.HttpResponse(simplejson.dumps(json_data), mimetype='text/javascript')
+    return http.HttpResponse(simplejson.dumps(json_data), mimetype='application/json')

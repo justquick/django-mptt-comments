@@ -3,7 +3,7 @@
     {% load mptt_tags %}
     {% load mptt_comments_tags %}
     
-    <div class="comment comment_level_{{ comment.level }}" id="comment_{{ comment.pk }}">
+    <div class="comment comment_level_{{ comment.level }} clearfix" id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
     <h3>{% trans "Commented by" %} {{ comment.name }} -
         {{ comment.submit_date|date:"l" }} {% trans "on" %}
@@ -11,7 +11,7 @@
         {{ comment.submit_date|date:"H:i" }}:
     </h3>
     
-    <p>{{ comment.comment|markdown }}</p>
+    {{ comment.comment|markdown }}
     
     <p>
         {% if comment|children_count %}{% ifequal comment.level cutoff_level %}

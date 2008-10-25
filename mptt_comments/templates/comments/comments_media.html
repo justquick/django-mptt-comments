@@ -4,7 +4,7 @@
     
     var comments_loaded = []
     var replies_loaded = []
-    
+
     function is_in(list, item) {
         for (var i=0;i<list.length;i++) {
             if (list[i] == item) return true
@@ -119,11 +119,14 @@
                             
                             var comments_tree = data.comments_tree
                             
-                            if (comments_tree) {
-                                $('#' + id).append(comments_tree.html)
+                            $('#outer').append('<textarea>' + comments_tree.html + '</textarea>')
+                            
+                            if (comments_tree) {  // 
+                                $('#' + id).append( '<div>' + comments_tree.html + '</div>' )
                             }
                             
                             repopulate_loaded_comments()
+                            
                             bind_replies()
                                 
                         }, "json")
@@ -135,12 +138,12 @@
             })
             
         }
-        
+
         $('#comments_more').bind("click", function() {
             
             repopulate_loaded_comments()
             
-            $.get($(this).attr('href') + '?is_ajax=1', {}, function(data, textStatus){
+            $.get($(this).attr('href') + '?is_ajax=1', { }, function(data, textStatus){
                 
                 var comments_for_update = data.comments_for_update
                 
@@ -185,7 +188,10 @@
             return false
         })
         
-        bind_replies() // intercept links
+        
+         bind_replies() // intercept links        
+
+        
     })
     </script>
     
