@@ -2,15 +2,21 @@
     {% load i18n %}
     {% load mptt_tags %}
     {% load mptt_comments_tags %}
-    
-    <div class="comment comment_level_{{ comment.level }} clearfix" id="comment_{{ comment.pk }}">
+    {% load comparison %}
+
+    <div class="comment comment_level_{{ comment.level }}
+            {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %}
+            {% if_less comment.level collapse_levels_below %} comment_collapsed{% endif_less %}" id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
-    <h3>{% trans "Commented by" %} {{ comment.name }} -
+
+    <h3><a href="{% url comment-detail comment.pk %}">{% trans "Commented by" %} {{ comment.name }} -
         {{ comment.submit_date|date:"l" }} {% trans "on" %}
         {{ comment.submit_date|date:"j F" }} {% trans "at" %}
-        {{ comment.submit_date|date:"H:i" }}:
+        {{ comment.submit_date|date:"H:i" }}</a>:
     </h3>
     
+    <div class="comment_content">
+
     {{ comment.comment|markdown }}
     
     <p>
@@ -26,6 +32,8 @@
             {% trans "Reply to this comment" %}
         </a>
     </p>
+    
+    </div>
    
     
     </div>

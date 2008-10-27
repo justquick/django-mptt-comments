@@ -222,13 +222,12 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
 
 def comments_more(request, from_comment_pk):
     
-    offset = int(request.GET.get('offset', 5))
-
+    offset = getattr(settings, 'DEFAULT_COMMENT_OFFSET', 25)
 
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
-    
+
     cutoff_level = 3
-    bottom_level = 1
+    bottom_level = 0
              
     qs = MpttComment.objects.filter(
         tree_id=comment.tree_id,
@@ -262,7 +261,8 @@ def comments_more(request, from_comment_pk):
         json_comment['html'] = render_to_string(
             template_list, {
                 "comment" : comment,
-                "cutoff_level": cutoff_level
+                "cutoff_level": cutoff_level,
+                "collapse_levels_above": 2
             }, 
             RequestContext(request, {})
         )
@@ -272,23 +272,52 @@ def comments_more(request, from_comment_pk):
     
     return http.HttpResponse(simplejson.dumps(json_data), mimetype='application/json')
     
-def comments_subtree(request, from_comment_pk):
+def comments_subtree(request, from_comment_pk, include_self=None, include_ancestors=None):
     
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)     
     
-    cutoff_level = comment.level+3
-    bottom_level = comment.level
+    cutoff_level = comment.level + 3
+    bottom_level = not include_ancestors and (comment.level - (include_self and 1 or 0)) or 0
     
     qs = MpttComment.objects.filter(
         tree_id=comment.tree_id, 
-        lft__gte=comment.lft+1,
+        lft__gte=comment.lft + (not include_self and 1 or 0),
         lft__lte=comment.rght,
-        level__lte=cutoff_level
+        level__lte=cutoff_level - (include_self and 1 or 0)
     ).order_by('tree_id', 'lft')
     
-    remaining_count = qs.count() 
+    is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
     
-    json_data = {'remaining_count': remaining_count, 'comments_for_update': [], 'comments_tree': {} }
-    json_data['comments_tree'] = comment_tree_json(request, list(qs), comment.tree_id, cutoff_level, bottom_level)
-    
-    return http.HttpResponse(simplejson.dumps(json_data), mimetype='application/json')
+    if is_ajax:    
+        
+        json_data = {'comments_for_update': [], 'comments_tree': {} }
+        json_data['comments_tree'] = comment_tree_json(request, list(qs), comment.tree_id, cutoff_level, bottom_level)
+        
+        return http.HttpResponse(simplejson.dumps(json_data), mimetype='application/json')
+        
+    else:
+        
+        target = comment.content_object
+        model = target.__class__
+
+        template_list = [
+            "comments/%s_%s_subtree.html" % tuple(str(model._meta).split(".")),
+            "comments/%s_subtree.html" % model._meta.app_label,
+            "comments/subtree.html"
+        ]
+        
+        comments = list(qs)
+        if include_ancestors:
+            comments = list(comment.get_ancestors())[1:] + comments
+        
+        return render_to_response(
+            template_list, {
+                "comments" : comments,
+                "bottom_level": bottom_level,
+                "cutoff_level": cutoff_level - 1,
+                "collapse_levels_above": cutoff_level - (include_self and 2 or 1),
+                "collapse_levels_below": comment.level
+
+            }, 
+            RequestContext(request, {})
+        )

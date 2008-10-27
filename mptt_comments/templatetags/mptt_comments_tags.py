@@ -1,5 +1,6 @@
 from django.contrib.comments.templatetags.comments import BaseCommentNode, CommentListNode
 from django import template
+from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 import mptt_comments
@@ -32,7 +33,8 @@ class MpttCommentFormNode(BaseMpttCommentNode):
 
 class MpttCommentListNode(BaseMpttCommentNode):
 
-    limit = 5
+    offset = getattr(settings, 'DEFAULT_COMMENT_OFFSET', 20)
+    
     cutoff_level = 3
     bottom_level = 0 
     
@@ -42,13 +44,14 @@ class MpttCommentListNode(BaseMpttCommentNode):
         return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level).order_by('tree_id', 'lft')
         
     def get_context_value_from_queryset(self, context, qs):
-        return list(qs[:self.limit])
+        return list(qs[:self.offset])
         
     def render(self, context):
         qs = self.get_query_set(context)
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
-        context['comments_remaining'] = self.get_query_set(context).count() - self.limit
+        context['comments_remaining'] = self.get_query_set(context).count() - self.offset
         context['root_comment'] = self.get_root_node(context)
+        context['collapse_levels_above'] = 2
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level
         return ''        

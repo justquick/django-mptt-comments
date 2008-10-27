@@ -8,14 +8,18 @@
     
     {% if not tree.new_level %}</div>{% endif %}
     
-    <div class="comment comment_level_{{ comment.level }} clearfix" id="comment_{{ comment.pk }}">
-        
-    <h3>{% trans "Commented by" %} {{ comment.name }} -
+    <div class="comment comment_level_{{ comment.level }}
+            {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %}
+            " id="comment_{{ comment.pk }}">
+    
+    <h3><a class="comment_expand" href="{% url comment-detail comment.pk %}">{% trans "Commented by" %} {{ comment.name }} -
         {{ comment.submit_date|date:"l" }} {% trans "on" %}
         {{ comment.submit_date|date:"j F" }} {% trans "at" %}
-        {{ comment.submit_date|date:"H:i" }}:
+        {{ comment.submit_date|date:"H:i" }}</a>:
     </h3>
     
+    <div class="comment_content {% if_less comment.level collapse_levels_below %} comment_collapsed_below{% endif_less %}">
+
     {{ comment.comment|markdown }}
     
     <p>
@@ -31,6 +35,8 @@
             {% trans "Reply to this comment" %}
         </a>
     </p>
+    
+    </div>
    
    {% for level in tree.closed_levels %}
    

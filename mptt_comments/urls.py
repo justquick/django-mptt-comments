@@ -23,10 +23,16 @@ urlpatterns = patterns('mptt_comments.views',
         'comments_more',
         name='comments-more'
     ),
-    url(r'^get/(\d+)/$',
+    url(r'^replies/(\d+)/$',
         'comments_subtree',
         name='comments-subtree'
+    ),
+    url(r'^detail/(\d+)/$',
+        'comments_subtree',
+        name='comment-detail',
+        kwargs={'include_self': True, 'include_ancestors': True}
     )
+    
 )
 
 urlpatterns += contrib_comments_urlpatterns

@@ -1,7 +1,7 @@
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
 
     <script type="text/javascript">
-    
+    //<![CDATA[
     var comments_loaded = []
     var replies_loaded = []
 
@@ -133,6 +133,34 @@
                 })
             })
             
+            $('.comment_expand').each(function() {
+            
+                var replies_link = $(this)    
+                
+                replies_link.bind("click", function(e) {
+                    
+                    var href = replies_link.attr('href')
+                    
+                    var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
+                    
+                    var comment_el = $('#' + id)
+                    var content_el = $('.comment_content', comment_el)
+                    
+                    if ((content_el).hasClass('comment_collapsed_below')) {
+                        content_el.removeClass('comment_collapsed_below')
+                    }
+                    else {
+                        if ((comment_el).hasClass('comment_collapsed')) {
+                            comment_el.removeClass('comment_collapsed')
+                        }
+                        else {
+                            comment_el.addClass('comment_collapsed')
+                        } 
+                    }
+                    return false
+                })
+            })
+            
         }
 
         $('#comments_more').bind("click", function() {
@@ -189,10 +217,14 @@
 
         
     })
+    //]]>
     </script>
     
     <style type="text/css">
         .comment_reply { text-decoration: underline; cursor: hand; }
-        .comment { margin-left: 0.5em; padding-left: 0.5em; border-left: solid 4px #dddddd; }
+        .comment { margin-left: 0.5em; margin-top: 0.5em; padding-left: 0.5em; border-left: solid 4px #dddddd; }
+        .comment_collapsed .comment, .comment_collapsed .comment_content { display: none; }
+        .comment_collapsed_below { display: none; }
+
     </style>
     
