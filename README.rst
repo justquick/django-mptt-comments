@@ -54,4 +54,4 @@ To display the toplevel tree in templates: ::
 
 TODO
 ====
-- Make non restful views / templates
+- Make the more link work without javascript
