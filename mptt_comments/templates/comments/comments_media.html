@@ -2,9 +2,11 @@
 
     <script type="text/javascript">
     //<![CDATA[
+    
     var comments_loaded = []
     var replies_loaded = []
-
+    var bound_links = []
+    
     function is_in(list, item) {
         for (var i=0;i<list.length;i++) {
             if (list[i] == item) return true
@@ -135,30 +137,34 @@
             
             $('.comment_expand').each(function() {
             
-                var replies_link = $(this)    
+                var expand_link = $(this)    
                 
-                replies_link.bind("click", function(e) {
-                    
-                    var href = replies_link.attr('href')
-                    
-                    var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
-                    
-                    var comment_el = $('#' + id)
-                    var content_el = $('.comment_content', comment_el)
-                    
-                    if ((content_el).hasClass('comment_collapsed_below')) {
-                        content_el.removeClass('comment_collapsed_below')
-                    }
-                    else {
-                        if ((comment_el).hasClass('comment_collapsed')) {
-                            comment_el.removeClass('comment_collapsed')
+                var href = expand_link.attr('href')    
+                var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
+                
+                var comment_el = $('#' + id)
+                var content_el = $('.comment_content', comment_el)
+                
+                if (!is_in(bound_links, id)) {
+                    expand_link.bind("click", function(e) {
+                            
+                        if (content_el.hasClass('comment_collapsed_below')) {
+                            content_el.removeClass('comment_collapsed_below')
                         }
                         else {
-                            comment_el.addClass('comment_collapsed')
-                        } 
-                    }
-                    return false
-                })
+                            if (comment_el.hasClass('comment_collapsed')) {
+                                comment_el.removeClass('comment_collapsed')
+                            }
+                            else {
+                                comment_el.addClass('comment_collapsed')
+                            } 
+                        }
+                        return false
+                    })
+                
+                    bound_links.push(id)
+                }
+                
             })
             
         }
@@ -205,7 +211,8 @@
                 else {
                      $('#comments_more').hide()
                 }
-                bind_replies()
+                
+               bind_replies()
                 
             }, "json")
             
