@@ -25,7 +25,7 @@ class MpttCommentManager(CommentManager):
         return root_comment
 
 class MpttComment(Comment):
-    
+    title = models.CharField(max_length=60)
     parent = models.ForeignKey('self', related_name='children', blank=True, null=True)
     
     class Meta:

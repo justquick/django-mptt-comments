@@ -9,11 +9,26 @@ import time
 import datetime
 
 class MpttCommentForm(CommentForm):
+    title = forms.CharField()
     parent_pk = forms.IntegerField(widget=forms.HiddenInput, required=False)
     
     def __init__(self, target_object, parent_comment=None, data=None, initial=None):
         self.parent_comment = parent_comment
         super(MpttCommentForm, self).__init__(target_object, data=data, initial=initial)
+        
+        self.fields.keyOrder = [
+            'title',
+            'name',
+            'email',
+            'url',
+            'comment',
+            'honeypot',
+            'content_type',
+            'object_pk',
+            'timestamp',
+            'security_hash',
+            'parent_pk'
+        ]
     
     def get_comment_object(self):
         """
@@ -43,6 +58,7 @@ class MpttCommentForm(CommentForm):
             site_id      = settings.SITE_ID,
             is_public    = True,
             is_removed   = False,
+            title = self.cleaned_data["title"],
             parent = parent_comment
         )
 
@@ -70,6 +86,9 @@ class MpttCommentForm(CommentForm):
             'object_pk'     : str(self.target_object._get_pk_val()),
             'timestamp'     : str(timestamp),
             'security_hash' : self.initial_security_hash(timestamp),
-            'parent_pk'     : self.parent_comment and str(self.parent_comment.pk) or ''
+            'parent_pk'     : self.parent_comment and str(self.parent_comment.pk) or '',
+            'title'         : self.parent_comment.level == 0 and force_unicode(self.target_object) or
+                                u'%s%s' % ( (self.parent_comment.title[:3] != u'Re:') and 'Re: '  or u'', self.parent_comment.title)
         }
+        
         return security_dict
