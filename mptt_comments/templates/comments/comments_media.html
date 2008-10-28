@@ -1,3 +1,5 @@
+    {% load i18n %}
+
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
 
     <script type="text/javascript">
@@ -59,8 +61,14 @@
                 $.post(form.attr("action"), post_data, function(data, textStatus){
                                     
                     if (posted_re.test(data)) {
-                        nxt.replaceWith(data)
-                        bind_replies()
+                        if (nxt.hasClass('new_comment_form_wrapper')) {
+                            $('#mptt-comments-tree').append(data)
+                            nxt.replaceWith('<p>{% trans "Your comment was posted." %}</p>')
+                        }
+                        else {
+                            nxt.replaceWith(data)
+                            bind_replies()
+                        }
                     }
                     else {
                         nxt.empty()
@@ -219,8 +227,13 @@
             return false
         })
         
+        $('.new_comment_form_wrapper').each(function(){
+            var nxt = $(this)
+            var frm = $('form', nxt)
+            bind_submit(frm, nxt) 
+        })
         
-         bind_replies() // intercept links        
+        bind_replies() // intercept links        
 
         
     })
