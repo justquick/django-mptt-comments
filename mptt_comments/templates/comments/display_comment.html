@@ -25,12 +25,14 @@
     <p>
         {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
             <a class="comment_replies" href="{% url comments-subtree comment.pk %}">
-        {% endifequal %}{% endif %}
-            {{ comment|children_count }} {% trans "replies" %}
-        {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
+                {{ comment|children_count }} {% trans "hidden replies" %}
             </a>
-        {% endifequal %}{% endif %}            
-            | 
+        {% else %}
+            {{ comment|children_count }} {% trans "replies" %}
+        {% endifequal %} |{% endif %}
+         <a class="comment_post_new" href="#post_new_comment">
+            {% trans "Post a new comment" %}
+        </a> |
         <a class="comment_reply" href="{% url comment-reply comment.pk %}">
             {% trans "Reply to this comment" %}
         </a>
