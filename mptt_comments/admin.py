@@ -9,7 +9,7 @@ class MpttCommentsAdmin(admin.ModelAdmin):
            {'fields': ('content_type', 'object_pk', 'parent', 'site')}
         ),
         (_('Content'),
-           {'fields': ('user', 'user_name', 'user_email', 'user_url', 'comment')}
+           {'fields': ('user', 'user_name', 'user_email', 'user_url', 'title', 'comment')}
         ),
         (_('Metadata'),
            {'fields': ('submit_date', 'ip_address', 'is_public', 'is_removed')}

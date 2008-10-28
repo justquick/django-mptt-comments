@@ -53,7 +53,8 @@ class MpttCommentListNode(BaseMpttCommentNode):
     def render(self, context):
         qs = self.get_query_set(context)
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
-        context['comments_remaining'] = self.get_query_set(context).count() - self.offset
+        comments_remaining = self.get_query_set(context).count()
+        context['comments_remaining'] = (comments_remaining - self.offset) > 0 and comments_remaining - self.offset or 0
         context['root_comment'] = self.get_root_node(context)
         context['collapse_levels_above'] = 2
         context['cutoff_level'] = self.cutoff_level
