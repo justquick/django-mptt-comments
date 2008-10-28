@@ -234,7 +234,7 @@ def comments_more(request, from_comment_pk):
         lft__gte=comment.lft+1,
         level__gte=1,
         level__lte=cutoff_level
-    ).order_by('tree_id', 'lft')
+    ).order_by('tree_id', 'lft').select_related('user')
     
     until_toplevel = []
     remaining = []
@@ -284,7 +284,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
         lft__gte=comment.lft + (not include_self and 1 or 0),
         lft__lte=comment.rght,
         level__lte=cutoff_level - (include_self and 1 or 0)
-    ).order_by('tree_id', 'lft')
+    ).order_by('tree_id', 'lft').select_related('user')
     
     is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
     

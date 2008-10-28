@@ -9,13 +9,17 @@ register = template.Library()
 
 class BaseMpttCommentNode(BaseCommentNode):
     
+    root_node = None
+    
     def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, comment=None):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
         self.comment_model = mptt_comments.get_model()
     
     def get_root_node(self, context):
-        ctype, object_pk = self.get_target_ctype_pk(context)
-        return self.comment_model.objects.get_root_comment(ctype, object_pk)
+        if not self.root_node:
+            ctype, object_pk = self.get_target_ctype_pk(context)
+            self.root_node = self.comment_model.objects.get_root_comment(ctype, object_pk)
+        return self.root_node
         
 class MpttCommentFormNode(BaseMpttCommentNode):
     """Insert a form for the comment model into the context."""
@@ -41,7 +45,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
         root_node = self.get_root_node(context)
-        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level).order_by('tree_id', 'lft')
+        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level).order_by('tree_id', 'lft').select_related('user')
         
     def get_context_value_from_queryset(self, context, qs):
         return list(qs[:self.offset])
