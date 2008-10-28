@@ -4,6 +4,10 @@ Django Mptt Comments
 
 Django Mptt Comments is a simple way to display threaded comments instead of the django contrib comments.
 
+`See this code in use here`__.
+
+__ http://www.levangerpuls.com/arrangementer/kultur/2008/10/23/tester/
+
 Installation
 ============
 
