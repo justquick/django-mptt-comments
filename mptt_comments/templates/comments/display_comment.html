@@ -9,13 +9,16 @@
             " id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
         
-    <a class="comment_expand" href="{% url comment-detail comment.pk %}">{{ comment.title }}</a>
+    <p class="comment_title"><a class="comment_expand" href="{% url comment-detail comment.pk %}">{{ comment.title }}</a></p>
     
     <div class="comment_content {% if_less comment.level collapse_levels_below %} comment_collapsed_below{% endif_less %}">
         
-    <h3>{% trans "Commented by" %} {{ comment.name }} -
-        {{ comment.submit_date|date:"l" }} {% trans "on" %}
-        {{ comment.submit_date|date:"j F" }} {% trans "at" %} {{ comment.submit_date|date:"H:i" }}</h3>
+    <p class="comment_meta">
+        <span class="commented_by">{% trans "Commented by" %} {{ comment.name }}</span> -
+        <span class="commented_day">{{ comment.submit_date|date:"l" }}</span>,
+        <span class="commented_date">{{ comment.submit_date|date:"j F" }}</span>
+        {% trans "at" %} <span class="commented_time">{{ comment.submit_date|date:"H:i" }}<span> 
+    </p>
         
     {{ comment.comment|markdown }}
     
