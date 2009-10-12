@@ -12,7 +12,7 @@ class MpttCommentManager(CommentManager):
         root_comment, uorc = self.model.objects.get_or_create(
             parent=None,
             content_type=ctype,
-            object_pk=object_pk,
+            object_pk=str(object_pk),
             defaults={
                 'comment': 'Root comment placeholder',
                 'user_name': 'Noname',
