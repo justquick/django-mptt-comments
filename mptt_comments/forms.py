@@ -29,6 +29,10 @@ class MpttCommentForm(CommentForm):
             'security_hash',
             'parent_pk'
         ]
+
+    def clean_title(self):
+        "Truncates title to 60 chrs to avoid integrity errors"
+        return self.cleaned_data['title'][:60]
     
     def get_comment_object(self):
         """
