@@ -3,6 +3,8 @@ from django.conf import settings
 from mptt_comments.models import MpttComment
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.comments.models import Comment
+from django.contrib.contenttypes.models import ContentType
+from mat.models import Foo
 
 class MpttCommentsAdmin(admin.ModelAdmin):
     fieldsets = (
@@ -17,11 +19,20 @@ class MpttCommentsAdmin(admin.ModelAdmin):
         )
      )
 
-    list_display = ('title', 'user', 'content_type', 'object_pk', 'ip_address', 'submit_date', 'is_public', 'is_removed')
+    list_display = ('title', 'user', 'getobject', 'ip_address', 'submit_date', 'is_public', 'is_removed')
     list_filter = ('submit_date', 'is_public', 'is_removed')
     date_hierarchy = 'submit_date'
     ordering = ('-submit_date',)
     search_fields = ('comment', 'user__username', 'user_name', 'user_email', 'user_url', 'ip_address')
+
+    def getobject(self, obj):
+        try:
+            object_type = ContentType.objects.get(model=str(obj.content_type))
+            o = object_type.get_object_for_this_type(pk=str(obj.object_pk))
+        except:
+            o = "%s : %s" % (obj.content_type, obj.object_pk) 
+        return o
+    getobject.short_description = 'Object'
 
     def queryset(self, request):
         return MpttComment.objects.filter(parent__isnull=False)
