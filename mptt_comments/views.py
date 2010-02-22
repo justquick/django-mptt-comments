@@ -277,7 +277,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
     
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)     
     
-    cutoff_level = comment.level + 3
+    cutoff_level = comment.level + getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = not include_ancestors and (comment.level - (include_self and 1 or 0)) or 0
     
     qs = MpttComment.objects.filter(
@@ -316,7 +316,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
                 "comments" : comments,
                 "bottom_level": bottom_level,
                 "cutoff_level": cutoff_level - 1,
-                "collapse_levels_above": cutoff_level - (include_self and 2 or 1),
+                "collapse_levels_above": getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2),
                 "collapse_levels_below": comment.level
 
             }, 

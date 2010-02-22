@@ -37,9 +37,8 @@ class MpttCommentFormNode(BaseMpttCommentNode):
 
 class MpttCommentListNode(BaseMpttCommentNode):
 
-    offset = getattr(settings, 'DEFAULT_COMMENT_OFFSET', 20)
-    
-    cutoff_level = 3
+    offset = getattr(settings, 'MPTT_COMMENT_OFFSET', 20)
+    cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0 
     
     def get_query_set(self, context):
@@ -56,7 +55,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
         comments_remaining = self.get_query_set(context).count()
         context['comments_remaining'] = (comments_remaining - self.offset) > 0 and comments_remaining - self.offset or 0
         context['root_comment'] = self.get_root_node(context)
-        context['collapse_levels_above'] = 2
+        context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level
         return ''        
