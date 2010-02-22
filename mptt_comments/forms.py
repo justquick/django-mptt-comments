@@ -57,7 +57,7 @@ class MpttCommentForm(CommentForm):
             comment      = self.cleaned_data["comment"],
             submit_date  = datetime.datetime.now(),
             site_id      = settings.SITE_ID,
-            is_public    = True,
+            is_public    = parent.is_public,
             is_removed   = False,
             title = self.cleaned_data["title"],
             parent = parent_comment

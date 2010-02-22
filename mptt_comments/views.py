@@ -287,6 +287,11 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
         level__lte=cutoff_level - (include_self and 1 or 0)
     ).order_by('tree_id', 'lft').select_related('user')
     
+    # match django's templatetags/comments.py behavior.
+    # FIXME: We need to be careful and make sure the children share the is_public
+    #        value from their parent, else the tree won't be displayed correctly.
+    qs = qs.filter(is_public=True)
+    
     is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
     
     if is_ajax:    
