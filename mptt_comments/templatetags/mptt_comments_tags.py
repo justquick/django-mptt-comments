@@ -37,7 +37,7 @@ class MpttCommentFormNode(BaseMpttCommentNode):
 
 class MpttCommentListNode(BaseMpttCommentNode):
 
-    offset = getattr(settings, 'MPTT_COMMENT_OFFSET', 20)
+    offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
     cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0 
     
