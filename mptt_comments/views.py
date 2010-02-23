@@ -227,7 +227,7 @@ def comments_more(request, from_comment_pk):
 
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
 
-    cutoff_level = 3
+    cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0
              
     qs = MpttComment.objects.filter(
