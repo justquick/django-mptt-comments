@@ -8,9 +8,7 @@
     
     {% if not tree.new_level %}</div>{% endif %}
     
-    <div class="comment comment_level_{{ comment.level }}
-            {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %}
-            " id="comment_{{ comment.pk }}">
+    <div class="comment comment_level_{{ comment.level }} {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %}" id="comment_{{ comment.pk }}">
     
     <p class="comment_title"><a class="comment_expand" href="{% url comment-detail comment.pk %}">{{ comment.title }}</a></p>
     
