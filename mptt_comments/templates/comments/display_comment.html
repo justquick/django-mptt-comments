@@ -2,6 +2,12 @@
     {% load mptt_tags %}
     {% load mptt_comments_tags %}
     {% load comparison %}
+    
+    {% if tree %}
+        {% if not tree.new_level %}
+            </div>
+        {% endif %}
+    {% endif %}
 
     <div class="comment comment_level_{{ comment.level }} {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %}" id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
@@ -37,5 +43,17 @@
     
     </div>
    
-    
-    </div>
+    {% if tree %}
+    {% for level in tree.closed_levels %}
+   
+        {% if forloop.parentloop.last %}
+            {# not the topmost tree, skip closing some levels #}         
+            {% if_greater level bottom_level %}</div>{% endif_greater %}
+        {% else %}
+            </div>
+        {% endif %}
+
+   {% endfor %}
+   {% else %}
+   </div>
+   {% endif %}
