@@ -5,13 +5,12 @@
 
     {% load comments %}
     {% load i18n %}
-    {% load markup %}
 
     <h1>{% trans "Preview of your comment" %}</h1>
     
 
     {% if comment %}
-        {{ comment|markdown }}
+        {{ comment }}
     {% endif %}
     
     <form action="{% comment_form_target %}" method="POST">

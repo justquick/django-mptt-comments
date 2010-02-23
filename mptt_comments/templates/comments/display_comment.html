@@ -1,4 +1,3 @@
-    {% load markup %}
     {% load i18n %}
     {% load mptt_tags %}
     {% load mptt_comments_tags %}
@@ -18,7 +17,7 @@
         {% trans "at" %} <span class="commented_time">{{ comment.submit_date|date:"H:i" }}<span> 
     </p>
         
-    {{ comment.comment|markdown }}
+    {{ comment.comment }}
     
     <p>
         {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
