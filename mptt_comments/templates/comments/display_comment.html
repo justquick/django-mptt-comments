@@ -17,7 +17,7 @@
         {% trans "at" %} <span class="commented_time">{{ comment.submit_date|date:"H:i" }}<span> 
     </p>
         
-    {{ comment.comment }}
+    {{ comment.comment|linebreaks }}
     
     <p>
         {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
