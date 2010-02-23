@@ -63,7 +63,7 @@ def post_comment(request, next=None):
     """
 
     # Require POST
-    if request.method != 'POST' and not get_initial_form:
+    if request.method != 'POST':
         return http.HttpResponseNotAllowed(["POST"])
         
     is_ajax = request.POST.get('is_ajax') and '_ajax' or ''
