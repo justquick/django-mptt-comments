@@ -223,7 +223,7 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
 
 def comments_more(request, from_comment_pk):
     
-    offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 25)
+    offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
 
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
 
