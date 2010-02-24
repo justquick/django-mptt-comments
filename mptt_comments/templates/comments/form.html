@@ -1,13 +1,13 @@
         
     {% load comments %}
     {% load i18n %}
-
+    <div class="comment_form">
     <form action="{% comment_form_target %}" method="POST">
         <fieldset>
             <ul>
             {% for field in form %}
                 {% if not field.is_hidden %}
-                <li class="{% if not field.field.required %}not{% endif %}required{% if field.errors %} errors{% endif %}{% ifequal field.name "honeypot" %} hidden{% endifequal %}">
+                <li class="{% if not field.field.required %}not{% endif %}required{% if field.errors %} errors{% endif %}{% ifequal field.name 'honeypot' %} hidden{% endifequal %}">
                     {{ field.label_tag }}
                     {{ field }}
                     {{ field.errors }}
@@ -31,3 +31,4 @@
             </ul>
         </fieldset>
     </form>
+    </div>
