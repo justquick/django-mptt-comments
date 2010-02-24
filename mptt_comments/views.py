@@ -231,7 +231,7 @@ def comments_more(request, from_comment_pk):
     cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0
              
-    qs = MpttComment.objects.filter(
+    qs = MpttComment.objects.filter_hidden_comments().filter(
         tree_id=comment.tree_id,
         lft__gte=comment.lft+1,
         level__gte=1,
@@ -281,17 +281,12 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
     cutoff_level = comment.level + getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = not include_ancestors and (comment.level - (include_self and 1 or 0)) or 0
     
-    qs = MpttComment.objects.filter(
+    qs = MpttComment.objects.filter_hidden_comments().filter(
         tree_id=comment.tree_id, 
         lft__gte=comment.lft + (not include_self and 1 or 0),
         lft__lte=comment.rght,
         level__lte=cutoff_level - (include_self and 1 or 0)
     ).order_by('tree_id', 'lft').select_related('user')
-    
-    # match django's templatetags/comments.py behavior.
-    # FIXME: We need to be careful and make sure the children share the is_public
-    #        value from their parent, else the tree won't be displayed correctly.
-    qs = qs.filter(is_public=True)
     
     is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
     
