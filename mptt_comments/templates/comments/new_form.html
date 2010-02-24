@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extrahead %}
+	{% mptt_comments_media_css %}
+{% endblock %}
+
 {% block content %}
     {% include "comments/form.html" %}
 {% endblock content %}

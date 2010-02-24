@@ -111,6 +111,14 @@ def mptt_comments_media():
 
     return mark_safe( render_to_string( ('comments/comments_media.html',) , { }) )
     
+def mptt_comments_media_css():
+
+    return mark_safe( render_to_string( ('comments/comments_media_css.html',) , { }) )
+    
+def mptt_comments_media_js():
+
+    return mark_safe( render_to_string( ('comments/comments_media_js.html',) , { }) )
+    
 def display_comment_toplevel_for(target):
 
     model = target.__class__
@@ -131,5 +139,7 @@ register.filter(children_count)
 register.tag(get_mptt_comment_form)
 register.simple_tag(mptt_comment_form_target)
 register.simple_tag(mptt_comments_media)
+register.simple_tag(mptt_comments_media_css)
+register.simple_tag(mptt_comments_media_js)
 register.tag(get_mptt_comment_list)
 register.simple_tag(display_comment_toplevel_for)
