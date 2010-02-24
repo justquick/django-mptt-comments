@@ -1,8 +1,8 @@
     {% load i18n %}
+    {% if comment %}
     <div class="comment">
     <h3>{% trans "Comment preview" %}</h3>
-    {% if comment %}
-        {{ comment }}
-    {% endif %}
+    {{ comment }}
     </div>
+    {% endif %}  
     {% include "comments/form.html" %}
