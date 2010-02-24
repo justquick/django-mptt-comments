@@ -2,16 +2,5 @@
 {# replace with your own base template and content block #}
 
 {% block content %}
-
-    {% load comments %}
-    {% load i18n %}
-
-    <h1>{% trans "Comment preview" %}</h1>
-    
-
-    {% if comment %}
-        {{ comment }}
-    {% endif %}
-    
-    {% include "comments/form.html" %}
+    {% include "comments/preview_comment.html" %}
 {% endblock %}

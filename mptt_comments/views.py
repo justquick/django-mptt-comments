@@ -128,6 +128,7 @@ def post_comment(request, next=None):
         return render_to_response(
             template_list, {
                 "comment" : form.data.get("comment", ""),
+                "title" : form.data.get("title", ""),
                 "form" : form,
                 "allow_post": not form.errors
             }, 
