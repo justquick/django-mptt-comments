@@ -223,11 +223,11 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
     return {}
 
 def comments_more(request, from_comment_pk):
-    
-    offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
 
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
 
+    offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
+    collapse_above = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
     cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0
              
@@ -264,7 +264,7 @@ def comments_more(request, from_comment_pk):
             template_list, {
                 "comment" : comment,
                 "cutoff_level": cutoff_level,
-                "collapse_levels_above": 2
+                "collapse_levels_above": collapse_above
             }, 
             RequestContext(request, {})
         )
@@ -279,6 +279,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)     
     
     cutoff_level = comment.level + getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
+    offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
     bottom_level = not include_ancestors and (comment.level - (include_self and 1 or 0)) or 0
     
     qs = MpttComment.objects.filter(
@@ -292,6 +293,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
     # FIXME: We need to be careful and make sure the children share the is_public
     #        value from their parent, else the tree won't be displayed correctly.
     qs = qs.filter(is_public=True)
+    qs = qs[:offset]
     
     is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
     
