@@ -44,7 +44,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
         root_node = self.get_root_node(context)
-        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level).order_by('tree_id', 'lft').select_related('user')
+        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level).select_related('user')
         
     def get_context_value_from_queryset(self, context, qs):
         return list(qs[:self.offset])
