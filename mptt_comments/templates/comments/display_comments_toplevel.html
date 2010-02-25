@@ -19,15 +19,7 @@
 
 </div>
     
-{% if comments_remaining %}
-<p>
-    {% with comments|last as last_comment %}
-    <a id="comments_more" href="{% url comments-more last_comment.pk %}">
-        {% trans "Still" %} <span id="comments_more_remaining">{{ comments_remaining }}</span> {% trans "comments left" %}
-    </a>
-    {% endwith %}
-</p>
-{% endif %}
+ {% include "comments/_comments_remaining.html" %}
 
 
 <h2 id="post_new_comment">{% trans "Post a new comment" %}</h2>
