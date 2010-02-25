@@ -19,6 +19,7 @@ class MpttCommentsAdmin(admin.ModelAdmin):
         )
      )
 
+    raw_id_fields = ('parent', 'user') # We don't really want to get huge <select> with all the comments, users...
     list_display = ('title', 'user', 'getobject', 'ip_address', 'submit_date', 'is_public', 'is_removed')
     list_filter = ('submit_date', 'is_public', 'is_removed')
     date_hierarchy = 'submit_date'
