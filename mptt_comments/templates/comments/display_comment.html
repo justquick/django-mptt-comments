@@ -42,18 +42,18 @@
     </p>
     
     </div>
-   
-    {% if tree %}
-    {% for level in tree.closed_levels %}
-   
-        {% if forloop.parentloop.last %}
-            {# not the topmost tree, skip closing some levels #}         
-            {% if_greater level bottom_level %}</div>{% endif_greater %}
-        {% else %}
-            </div>
-        {% endif %}
 
-   {% endfor %}
-   {% else %}
-   </div>
+    {% if tree %}
+        {% for level in tree.closed_levels %}
+       
+            {% if forloop.parentloop.last %}
+                {# not the topmost tree, skip closing some levels #}
+                {% if_greater level bottom_level %}</div>{% endif_greater %}
+            {% else %}
+                </div>
+            {% endif %}
+
+       {% endfor %}
+       {% else %}
+       </div>
    {% endif %}
