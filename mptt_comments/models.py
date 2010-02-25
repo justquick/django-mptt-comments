@@ -24,6 +24,9 @@ class MpttCommentManager(CommentManager):
             
         return root_comment
         
+    def get_query_set(self):
+        return super(MpttCommentManager, self).get_query_set().select_related('user')
+    
     def filter_hidden_comments(self):
         """
         Match django's templatetags/comments.py behavior and hide is_public=False
