@@ -176,7 +176,7 @@ def confirmation_view(template, doc="Display a confirmation view.", is_ajax=Fals
             except ObjectDoesNotExist:
                 pass
         return render_to_response(template, {
-                'comment': comment
+                'comment': comment,
                 'is_ajax': is_ajax
             },
             context_instance=RequestContext(request)
