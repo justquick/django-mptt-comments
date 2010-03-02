@@ -11,15 +11,72 @@ class BaseMpttCommentNode(BaseCommentNode):
     
     root_node = None
     
-    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, comment=None):
+    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, comment=None):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
         self.comment_model = mptt_comments.get_model()
+        self.with_parent = with_parent
+        self.root_only = root_only        
     
     def get_root_node(self, context):
         if not self.root_node:
             ctype, object_pk = self.get_target_ctype_pk(context)
             self.root_node = self.comment_model.objects.get_root_comment(ctype, object_pk)
         return self.root_node
+        
+    def handle_token(cls, parser, token):
+        """
+            Class method to parse get_comment_list/count/form and return a Node.
+
+            Forked from django.contrib.comments.templatetags. with_parent, 
+            root-only concepts borrowed from django-threadedcomments.
+        """
+        tokens = token.contents.split()
+        
+        extra_kw = {}
+        with_parent = None
+        if tokens[-1] == 'root_only':
+            extra_kw[str(tokens.pop())] = True
+        
+        if tokens[1] != 'for':
+            raise template.TemplateSyntaxError("Second argument in %r tag must be 'for'" % tokens[0])
+
+        # {% get_whatever for obj as varname %}
+        # {% get_whatever for obj as varname with parent %}
+        if len(tokens) == 5 or len(tokens) == 7:
+            if tokens[3] != 'as':
+                raise template.TemplateSyntaxError("Third argument in %r must be 'as'" % tokens[0])
+            if len(tokens) == 7:
+                if tokens[5] != 'with':
+                    raise template.TemplateSyntaxError("When 6 arguments are given, fifth argument in %r must be 'with' followed by the parent commment wanted" % tokens[0])
+                with_parent = tokens[6]
+            return cls(
+                object_expr = parser.compile_filter(tokens[2]),
+                as_varname = tokens[4],
+                with_parent = with_parent,
+                **extra_kw
+            )
+
+        # {% get_whatever for app.model pk as varname %}
+        # {% get_whatever for app.model pk as varname with parent %}
+        elif len(tokens) == 6 or len(tokens) == 8:
+            if tokens[4] != 'as':
+                raise template.TemplateSyntaxError("Fourth argument in %r must be 'as'" % tokens[0])
+            if len(tokens) == 8:
+                if tokens[6] != 'with':
+                    raise template.TemplateSyntaxError("When 6 arguments are given, fifth argument in %r must be 'with' followed by the parent commment wanted" % tokens[0])
+                with_parent = tokens[7]
+            return cls(
+                ctype = BaseCommentNode.lookup_content_type(tokens[2], tokens[0]),
+                object_pk_expr = parser.compile_filter(tokens[3]),
+                as_varname = tokens[5],
+                with_parent = with_parent,
+                **extra_kw
+            )
+
+        else:
+            raise template.TemplateSyntaxError("%r tag requires 4, 5, 6 or 7 arguments" % tokens[0])
+
+    handle_token = classmethod(handle_token)
         
 class MpttCommentFormNode(BaseMpttCommentNode):
     """Insert a form for the comment model into the context."""
@@ -38,22 +95,41 @@ class MpttCommentFormNode(BaseMpttCommentNode):
 class MpttCommentListNode(BaseMpttCommentNode):
 
     offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
+    toplevel_offset = getattr(settings, 'MPTT_COMMENTS_TOPLEVEL_OFFSET', 20)
     cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0 
     
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
         root_node = self.get_root_node(context)
-        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=self.cutoff_level)
+        cutoff = self.cutoff_level
+        
+        if self.with_parent:
+            if self.with_parent in context:
+                parent = context[self.with_parent]
+                qs = qs.filter(lft__gt=parent.lft, rght__lt=parent.rght)
+                self.bottom_level = parent.level
+            else:
+               raise template.TemplateSyntaxError("Variable %s doesn't exist in context" % self.with_parent)
+        if self.root_only:
+            cutoff = 1
+
+        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=cutoff)
         
     def get_context_value_from_queryset(self, context, qs):
-        return list(qs[:self.offset])
+        return list(qs[:self.get_offset()])
+        
+    def get_offset(self):
+        if self.root_only:
+            return self.toplevel_offset
+        else:
+            return self.offset
         
     def render(self, context):
         qs = self.get_query_set(context)
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
-        comments_remaining = self.get_query_set(context).count()
-        context['comments_remaining'] = (comments_remaining - self.offset) > 0 and comments_remaining - self.offset or 0
+        comments_remaining = qs.count()
+        context['comments_remaining'] = (comments_remaining - self.get_offset()) > 0 and comments_remaining - self.get_offset() or 0
         context['root_comment'] = self.get_root_node(context)
         context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
