@@ -1,0 +1,61 @@
+    {% load i18n %}
+    {% load mptt_tags %}
+    {% load mptt_comments_tags %}
+    {% load comparison %}
+    
+    {# only use this template for level=1 comments, in alternate mode! #}
+
+    <div class="comment comment_level_1 {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}{% if not comment.is_public %}not_public{% endif %}" id="comment_{{ comment.pk }}">
+    <!-- this_is_a_level1_comment - alternate loading system -->
+        
+        <p class="comment_title"><a class="comment_expand" href="{% url comment-detail comment.pk %}">{{ comment.title }}</a></p>
+        
+        <div class="comment_content {% if_less comment.level collapse_levels_below %} comment_collapsed_below{% endif_less %}">
+            
+            <p class="comment_meta">
+                <span class="commented_by">{% trans "Commented by" %} {{ comment.name }}</span> -
+                <span class="commented_day">{{ comment.submit_date|date:"l" }}</span>,
+                <span class="commented_date">{{ comment.submit_date|date:"j F" }}</span>
+                {% trans "at" %} <span class="commented_time">{{ comment.submit_date|date:"H:i" }}<span> 
+            </p>
+                
+            {{ comment.comment|linebreaks }}
+
+            
+            id : {{ comment.id }} ; 
+            <br />
+            <br />
+            tree_id : {{ comment.tree_id }} ; 
+            lft : {{ comment.lft }} ;
+            rght : {{ comment.rght }} ;
+            level : {{ comment.level }}     
+            
+            <p>
+                {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
+                    <a class="comment_replies" href="{% url comments-subtree comment.pk %}">
+                        {{ comment|children_count }} {% trans "hidden replies" %}
+                    </a>
+                {% else %}
+                    {{ comment|children_count }} {% trans "replies" %}
+                    {# in alternate mode, we do more queries, but each tree can be limited, filled, etc independently #}
+                    {% get_mptt_comment_list for object as subcomments with comment %}
+                {% endifequal %} |{% endif %}
+                 <a class="comment_post_new" href="#post_new_comment">
+                    {% trans "Post a new comment" %}
+                </a> |
+                <a class="comment_reply" href="{% url comment-reply comment.pk %}">
+                    {% trans "Reply to this comment" %}
+                </a>
+            </p>
+        
+        </div>
+
+        {% if comment|children_count and subcomments %}
+            {% for comment, tree in subcomments|tree_info %}
+                {% include "comments/alternate/display_comment.html" %}
+            {% endfor %}   
+            {% with subcomments as comments %}
+                {% include "comments/alternate/_comments_remaining.html" %}
+            {% endwith %}
+        {% endif %}
+    </div>

@@ -1,0 +1,8 @@
+    {% load mptt_tags %}
+    {% load mptt_comments_tags %}
+
+    {% for comment in comments %}
+        
+        {% include "comments/alternate/display_comment.html" %}
+   
+    {% endfor %}   
