@@ -11,11 +11,12 @@ class BaseMpttCommentNode(BaseCommentNode):
     
     root_node = None
     
-    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, comment=None):
+    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, comment=None):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
         self.comment_model = mptt_comments.get_model()
         self.with_parent = with_parent
-        self.root_only = root_only        
+        self.root_only = root_only
+        self.reverse = reverse
     
     def get_root_node(self, context):
         if not self.root_node:
@@ -32,11 +33,13 @@ class BaseMpttCommentNode(BaseCommentNode):
         """
         tokens = token.contents.split()
         
-        extra_kw = {}
         with_parent = None
-        if tokens[-1] == 'root_only':
-            extra_kw[str(tokens.pop())] = True
-        
+        extra_kw = {}
+        extra_possible_kw = ('root_only', 'reverse')
+        for dummy in extra_possible_kw:
+            if tokens[-1] in extra_possible_kw:
+                extra_kw[str(tokens.pop())] = True
+
         if tokens[1] != 'for':
             raise template.TemplateSyntaxError("Second argument in %r tag must be 'for'" % tokens[0])
 
@@ -117,6 +120,8 @@ class MpttCommentListNode(BaseMpttCommentNode):
         return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=cutoff)
         
     def get_context_value_from_queryset(self, context, qs):
+        if self.reverse:
+            qs = qs.reverse()
         return list(qs[:self.get_offset()])
         
     def get_offset(self):
