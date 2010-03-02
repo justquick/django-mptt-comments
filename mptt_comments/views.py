@@ -130,7 +130,8 @@ def post_comment(request, next=None):
                 "comment" : form.data.get("comment", ""),
                 "title" : form.data.get("title", ""),
                 "form" : form,
-                "allow_post": not form.errors
+                "allow_post": not form.errors,
+                "is_ajax" : is_ajax
             }, 
             RequestContext(request, {})
         )
@@ -162,7 +163,7 @@ def post_comment(request, next=None):
     
     return next_redirect(data, next, 'comments-comment-done%s' % (is_ajax and '-ajax' or ''), c=comment._get_pk_val())
     
-def confirmation_view(template, doc="Display a confirmation view."):
+def confirmation_view(template, doc="Display a confirmation view.", is_ajax=False):
     """
     Confirmation view generator for the "comment was
     posted/flagged/deleted/approved" views.
@@ -174,8 +175,10 @@ def confirmation_view(template, doc="Display a confirmation view."):
                 comment = mptt_comments.get_model().objects.get(pk=request.GET['c'])
             except ObjectDoesNotExist:
                 pass
-        return render_to_response(template,
-            {'comment': comment},
+        return render_to_response(template, {
+                'comment': comment
+                'is_ajax': is_ajax
+            },
             context_instance=RequestContext(request)
         )
 
@@ -192,7 +195,8 @@ def confirmation_view(template, doc="Display a confirmation view."):
     
 comment_done_ajax = confirmation_view(
     template = "comments/posted_ajax.html",
-    doc = """Display a "comment was posted" success page."""
+    doc = """Display a "comment was posted" success page.""",
+    is_ajax = True
 )
 
 comment_done = confirmation_view(
@@ -214,7 +218,8 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
             template_list, {
                 "comments" : object_list,
                 "cutoff_level": cutoff_level,
-                "bottom_level": bottom_level
+                "bottom_level": bottom_level,
+                "is_ajax" : True,
             }, 
             RequestContext(request, {})
         )
@@ -264,7 +269,8 @@ def comments_more(request, from_comment_pk):
             template_list, {
                 "comment" : comment,
                 "cutoff_level": cutoff_level,
-                "collapse_levels_above": collapse_above
+                "collapse_levels_above": collapse_above,
+                "is_ajax" : True,
             }, 
             RequestContext(request, {})
         )
