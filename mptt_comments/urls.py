@@ -23,6 +23,11 @@ urlpatterns = patterns('mptt_comments.views',
         'comments_more',
         name='comments-more'
     ),
+    url(r'^submore/(\d+)/$',
+        'comments_more',
+        name='comments-submore',
+        kwargs={'restrict_to_subtree': True }
+    ),    
     url(r'^replies/(\d+)/$',
         'comments_subtree',
         name='comments-subtree'

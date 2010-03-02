@@ -227,7 +227,7 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
         return json_comments
     return {}
 
-def comments_more(request, from_comment_pk):
+def comments_more(request, from_comment_pk, restrict_to_subtree=False):
 
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
 
@@ -243,6 +243,17 @@ def comments_more(request, from_comment_pk):
         level__lte=cutoff_level
     )
     
+    if restrict_to_subtree:
+        if comment.level == 1:
+            # Level 1 comment, we just need to restrict to its rght value
+            (subtree_rght, tid) = comment.rght, comment.id
+        else:
+            # We want to restrict to the subtree. If we had multiple root nodes
+            # it would be straightforward, but since we don't, let's look in the
+            # ancestors and extract the rght value of the first level of our subtree
+            (subtree_rght, tid) = comment.get_ancestors().values_list('rght', 'id')[1]
+        qs = qs.filter(rght__lt=subtree_rght)
+        
     until_toplevel = []
     remaining = []
     toplevel_reached = False
@@ -259,9 +270,11 @@ def comments_more(request, from_comment_pk):
             until_toplevel.append(comment)
     
     json_data = {'remaining_count': remaining_count, 'comments_for_update': [], 'comments_tree': {} }
+    if restrict_to_subtree:
+        json_data['tid'] = tid
     
     for comment in until_toplevel:    
-        json_comment = {'level': comment.level, 'pk': comment.pk}
+        json_comment = {'level': comment.level, 'pk': comment.pk, 'parent' : comment.parent_id}
         template_list = [
             "comments/display_comment.html",
         ]
@@ -325,7 +338,6 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
                 "cutoff_level": cutoff_level - 1,
                 "collapse_levels_above": getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2),
                 "collapse_levels_below": comment.level
-
             }, 
             RequestContext(request, {})
         )
