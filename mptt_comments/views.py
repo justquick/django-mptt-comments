@@ -227,7 +227,7 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
         return json_comments
     return {}
 
-def comments_more(request, from_comment_pk, restrict_to_subtree=False):
+def comments_more(request, from_comment_pk, restrict_to_tree=False):
 
     comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
 
@@ -237,22 +237,14 @@ def comments_more(request, from_comment_pk, restrict_to_subtree=False):
     bottom_level = 0
              
     qs = MpttComment.objects.filter_hidden_comments().filter(
-        tree_id=comment.tree_id,
+        content_type=comment.content_type,
+        object_pk=comment.object_pk,
         lft__gte=comment.lft+1,
-        level__gte=1,
         level__lte=cutoff_level
     )
     
-    if restrict_to_subtree:
-        if comment.level == 1:
-            # Level 1 comment, we just need to restrict to its rght value
-            (subtree_rght, tid) = comment.rght, comment.id
-        else:
-            # We want to restrict to the subtree. If we had multiple root nodes
-            # it would be straightforward, but since we don't, let's look in the
-            # ancestors and extract the rght value of the first level of our subtree
-            (subtree_rght, tid) = comment.get_ancestors().values_list('rght', 'id')[1]
-        qs = qs.filter(rght__lt=subtree_rght)
+    if restrict_to_tree:
+        qs = qs.filter(tree_id=comment.tree_id)
         
     until_toplevel = []
     remaining = []
@@ -261,7 +253,7 @@ def comments_more(request, from_comment_pk, restrict_to_subtree=False):
     
     for comment in qs[:offset]:
         
-        if comment.level == 1:
+        if comment.level == 0:
             toplevel_reached = True
             
         if toplevel_reached:
@@ -270,8 +262,8 @@ def comments_more(request, from_comment_pk, restrict_to_subtree=False):
             until_toplevel.append(comment)
     
     json_data = {'remaining_count': remaining_count, 'comments_for_update': [], 'comments_tree': {} }
-    if restrict_to_subtree:
-        json_data['tid'] = tid
+    if restrict_to_tree:
+        json_data['tid'] = comment.get_root().id
     
     for comment in until_toplevel:    
         json_comment = {'level': comment.level, 'pk': comment.pk, 'parent' : comment.parent_id}
@@ -329,7 +321,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
         
         comments = list(qs)
         if include_ancestors:
-            comments = list(comment.get_ancestors())[1:] + comments
+            comments = list(comment.get_ancestors()) + comments
         
         return render_to_response(
             template_list, {

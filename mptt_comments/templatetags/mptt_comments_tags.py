@@ -9,21 +9,13 @@ register = template.Library()
 
 class BaseMpttCommentNode(BaseCommentNode):
     
-    root_node = None
-    
     def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, comment=None):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
         self.comment_model = mptt_comments.get_model()
         self.with_parent = with_parent
         self.root_only = root_only
         self.reverse = reverse
-    
-    def get_root_node(self, context):
-        if not self.root_node:
-            ctype, object_pk = self.get_target_ctype_pk(context)
-            self.root_node = self.comment_model.objects.get_root_comment(ctype, object_pk)
-        return self.root_node
-        
+            
     def handle_token(cls, parser, token):
         """
             Class method to parse get_comment_list/count/form and return a Node.
@@ -87,7 +79,8 @@ class MpttCommentFormNode(BaseMpttCommentNode):
     def get_form(self, context):
         ctype, object_pk = self.get_target_ctype_pk(context)
         if object_pk:
-            return mptt_comments.get_form()(ctype.get_object_for_this_type(pk=object_pk), parent_comment=self.get_root_node(context))
+            return mptt_comments.get_form()(ctype.get_object_for_this_type(pk=object_pk), 
+                                            parent_comment=None)
         else:
             return None
 
@@ -104,7 +97,6 @@ class MpttCommentListNode(BaseMpttCommentNode):
     
     def get_query_set(self, context):
         qs = super(MpttCommentListNode, self).get_query_set(context)
-        root_node = self.get_root_node(context)
         cutoff = self.cutoff_level
         
         if self.with_parent:
@@ -115,9 +107,9 @@ class MpttCommentListNode(BaseMpttCommentNode):
             else:
                raise template.TemplateSyntaxError("Variable %s doesn't exist in context" % self.with_parent)
         if self.root_only:
-            cutoff = 1
+            cutoff = 0
 
-        return qs.filter(tree_id=root_node.tree_id, level__gte=1, level__lte=cutoff)
+        return qs.filter(level__lte=cutoff)
         
     def get_context_value_from_queryset(self, context, qs):
         if self.reverse:
@@ -135,7 +127,6 @@ class MpttCommentListNode(BaseMpttCommentNode):
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
         comments_remaining = qs.count()
         context['comments_remaining'] = (comments_remaining - self.get_offset()) > 0 and comments_remaining - self.get_offset() or 0
-        context['root_comment'] = self.get_root_node(context)
         context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level

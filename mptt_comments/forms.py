@@ -59,8 +59,8 @@ class MpttCommentForm(CommentForm):
             site_id      = settings.SITE_ID,
             is_public    = parent_comment and parent_comment.is_public or True,
             is_removed   = False,
-            title = self.cleaned_data["title"],
-            parent = parent_comment
+            title        = self.cleaned_data["title"],
+            parent       = parent_comment
         )
 
 	# FIXME: maybe re-implement duplicate checking later
@@ -76,7 +76,7 @@ class MpttCommentForm(CommentForm):
             'timestamp'     : str(timestamp),
             'security_hash' : self.initial_security_hash(timestamp),
             'parent_pk'     : self.parent_comment and str(self.parent_comment.pk) or '',
-            'title'         : self.parent_comment.level == 0 and force_unicode(self.target_object) or
+            'title'         : not self.parent_comment and force_unicode(self.target_object) or
                                 u'%s%s' % ( (self.parent_comment.title[:3] != u'Re:') and 'Re: '  or u'', self.parent_comment.title)
         }
         

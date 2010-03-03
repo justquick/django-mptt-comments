@@ -3,10 +3,10 @@
     {% load mptt_comments_tags %}
     {% load comparison %}
     
-    {# only use this template for level=1 comments, in alternate mode! #}
+    {# only use this template for level=0 comments, in alternate mode! #}
 
-    <div class="comment comment_level_1 {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}{% if not comment.is_public %}not_public{% endif %}" id="comment_{{ comment.pk }}">
-    <!-- this_is_a_level1_comment - alternate loading system -->
+    <div class="comment comment_level_{{ comment.level }} {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}{% if not comment.is_public %}not_public{% endif %}" id="comment_{{ comment.pk }}">
+    <!-- this should be a level 0 comment - alternate loading system -->
         
         <p class="comment_title"><a class="comment_expand" href="{% url comment-detail comment.pk %}">{{ comment.title }}</a></p>
         
@@ -20,15 +20,6 @@
             </p>
                 
             {{ comment.comment|linebreaks }}
-
-            
-            id : {{ comment.id }} ; 
-            <br />
-            <br />
-            tree_id : {{ comment.tree_id }} ; 
-            lft : {{ comment.lft }} ;
-            rght : {{ comment.rght }} ;
-            level : {{ comment.level }}     
             
             <p>
                 {% if comment|children_count %}{% ifequal comment.level cutoff_level %}

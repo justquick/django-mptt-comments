@@ -25,21 +25,6 @@
         
     {{ comment.comment|linebreaks }}
 
-    
-    id : {{ comment.id }} ; 
-    <br />
-    parent_id : {{ comment.parent_id }} ;
-    <br />
-    tree_id : {{ comment.tree_id }} ; 
-    lft : {{ comment.lft }} ;
-    rght : {{ comment.rght }} ;
-    level : {{ comment.level }} ;
-    <br />
-    tree.new_level : {{ tree.new_level }} ;
-    tree.closed_levels : {{ tree.closed_levels }} ;
-    <br />
-    bottom_level : {{ bottom_level }} ;
-    
     <p>
         {% if comment|children_count %}{% ifequal comment.level cutoff_level %}
             <a class="comment_replies" href="{% url comments-subtree comment.pk %}">

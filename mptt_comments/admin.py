@@ -20,7 +20,7 @@ class MpttCommentsAdmin(admin.ModelAdmin):
      )
 
     raw_id_fields = ('parent', 'user') # We don't really want to get huge <select> with all the comments, users...
-    list_display = ('title', 'user', 'getobject', 'ip_address', 'submit_date', 'is_public', 'is_removed')
+    list_display = ('title', 'user', 'getobject', 'level', 'ip_address', 'submit_date', 'is_public', 'is_removed')
     list_filter = ('submit_date', 'is_public', 'is_removed')
     date_hierarchy = 'submit_date'
     ordering = ('-submit_date',)
@@ -34,9 +34,6 @@ class MpttCommentsAdmin(admin.ModelAdmin):
             o = "%s : %s" % (obj.content_type, obj.object_pk) 
         return o
     getobject.short_description = 'Object'
-
-    def queryset(self, request):
-        return MpttComment.objects.filter(parent__isnull=False)
 
 try:
 	admin.site.unregister(Comment)
