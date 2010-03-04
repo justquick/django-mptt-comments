@@ -19,6 +19,7 @@
         var comment_pk_re = new RegExp("comment_(\\d+)", "")
         
         var posted_re = new RegExp("this_is_a_comment", "g")
+        var reply_count_re = new RegExp("(\\d+)")
 
         function repopulate_loaded_comments() {
             
@@ -38,6 +39,21 @@
             
         }
         
+        function update_replies_count(nxt) {
+            var parents = nxt.parents('.comment')
+            parents.each(function() {
+                var item = $("#" + this.id + " > .comment_content > .comment_reply_links > .comment_replies ")              
+                var txt = item.text()
+                if (txt) {
+                    txt = txt.replace(reply_count_re, parseInt(reply_count_re.exec(txt)[1], 10) + 1)
+                } 
+                else {
+                    txt = '1 {% trans "replies" %}';
+                }
+                item.text(txt)
+            })  
+        }
+        
         function bind_submit(form, nxt) {
         
             var post_data = {}
@@ -55,7 +71,7 @@
                 
                 post_data['is_ajax'] = 1
                             
-                $.post(form.attr("action"), post_data, function(data, textStatus){
+                $.post(form.attr('action'), post_data, function(data, textStatus){
                                     
                     if (posted_re.test(data)) {
                         if (nxt.hasClass('new_comment_form_wrapper')) {
@@ -63,7 +79,8 @@
                             nxt.replaceWith('<p>{% trans "Your comment was posted." %}</p>')
                         }
                         else {
-                            nxt.replaceWith(data)
+                            update_replies_count(nxt)
+                            nxt.replaceWith(data)                                
                             bind_replies()
                         }
                     }
@@ -111,7 +128,7 @@
             })
             
                             
-            $('.comment_replies').each(function() {
+            $('a.comment_replies').each(function() {
             
                 var replies_link = $(this)    
                 
