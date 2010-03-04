@@ -102,7 +102,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
         if self.with_parent:
             if self.with_parent in context:
                 parent = context[self.with_parent]
-                qs = qs.filter(lft__gt=parent.lft, rght__lt=parent.rght)
+                qs = qs.filter(tree_id=parent.tree_id, lft__gt=parent.lft, rght__lt=parent.rght)
                 self.bottom_level = parent.level
             else:
                raise template.TemplateSyntaxError("Variable %s doesn't exist in context" % self.with_parent)
