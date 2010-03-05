@@ -1,10 +1,10 @@
+from django.contrib import comments
 from django.contrib.comments.templatetags.comments import BaseCommentNode, CommentListNode
 from django import template
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.utils.encoding import smart_unicode
-import mptt_comments
 
 register = template.Library()
 
@@ -12,7 +12,6 @@ class BaseMpttCommentNode(BaseCommentNode):
     
     def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, flat=False, comment=None):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
-        self.comment_model = mptt_comments.get_model()
         self.with_parent = with_parent
         self.root_only = root_only
         self.reverse = reverse
@@ -81,8 +80,8 @@ class MpttCommentFormNode(BaseMpttCommentNode):
     def get_form(self, context):
         ctype, object_pk = self.get_target_ctype_pk(context)
         if object_pk:
-            return mptt_comments.get_form()(ctype.get_object_for_this_type(pk=object_pk), 
-                                            parent_comment=None)
+            return comments.get_form()(ctype.get_object_for_this_type(pk=object_pk), 
+                                       parent_comment=None)
         else:
             return None
 
@@ -255,7 +254,7 @@ def mptt_comment_form_target():
 
         <form action="{% comment_form_target %}" method="POST">
     """
-    return mptt_comments.get_form_target()
+    return comments.get_form_target()
 
 def children_count(comment):
     return (comment.rght - comment.lft) / 2
