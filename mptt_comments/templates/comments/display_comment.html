@@ -9,10 +9,18 @@
         {% endif %}
     {% endif %}
 
-    <div class="comment comment_level_{{ comment.level }} {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}{% if not comment.is_public %}not_public{% endif %}" id="comment_{{ comment.pk }}">
+    <div class="comment comment_level_{{ comment.level }} {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}" id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
         
-    <p class="comment_title"><a class="comment_expand" href="{% url comment-detail comment.pk %}">{{ comment.title }}</a></p>
+    <p class="comment_title">
+        <a class="comment_expand" href="{% url comment-detail comment.pk %}">
+            {% if comment.is_removed %}
+                {% trans "Comment removed" %}
+            {% else %}
+                {{ comment.title }}
+            {% endif %}
+        </a>
+    </p>
     
     <div class="comment_content {% if_less comment.level collapse_levels_below %} comment_collapsed_below{% endif_less %}">
         
@@ -23,7 +31,11 @@
         {% trans "at" %} <span class="commented_time">{{ comment.submit_date|date:"H:i" }}<span> 
     </p>
         
-    {{ comment.comment|linebreaks }}
+    {% if comment.is_removed %}
+        {% trans "Comment removed" %}
+    {% else %}
+        {{ comment.comment|linebreaks }}
+    {% endif %}
     
     {% include "comments/_comment_replies.html" %}
     
