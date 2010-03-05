@@ -87,6 +87,13 @@ class MpttCommentFormNode(BaseMpttCommentNode):
     def render(self, context):
         context[self.as_varname] = self.get_form(context)
         return ''
+        
+class MpttCommentTopLevelCountNode(BaseMpttCommentNode):
+
+    """Insert a count of toplevel comments into the context."""
+
+    def get_context_value_from_queryset(self, context, qs):
+        return qs.filter(level=0).count()
 
 class MpttCommentListNode(BaseMpttCommentNode):
 
@@ -130,7 +137,23 @@ class MpttCommentListNode(BaseMpttCommentNode):
         context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level
-        return ''        
+        return ''  
+        
+def get_mptt_comment_toplevel_count(parser, token):
+    """
+    Gets the toplevel comment count for the given params and populates the template
+    context with a variable containing that value, whose name is defined by the
+    'as' clause.
+
+    Syntax::
+
+        {% get_mptt_comment_toplevel_count for [object] as [varname]  %}
+        {% get_mptt_comment_toplevel_count for [app].[model] [object_id] as [varname]  %}
+
+    """
+
+    return MpttCommentTopLevelCountNode.handle_token(parser, token)
+      
         
 def get_mptt_comment_list(parser, token):
     """
@@ -214,4 +237,5 @@ register.simple_tag(mptt_comments_media)
 register.simple_tag(mptt_comments_media_css)
 register.simple_tag(mptt_comments_media_js)
 register.tag(get_mptt_comment_list)
+register.tag(get_mptt_comment_toplevel_count)
 register.simple_tag(display_comment_toplevel_for)
