@@ -159,7 +159,7 @@ class MpttCommentListNode(BaseMpttCommentNode):
         
     def get_context_value_from_queryset(self, context, qs):
         if self.reverse:
-            qs = qs.order_by('-tree_id', 'lft')
+            qs = qs.reverse()
         offset = self.get_offset()
         if offset > 0:
             return list(qs[:offset])
@@ -175,8 +175,9 @@ class MpttCommentListNode(BaseMpttCommentNode):
     def render(self, context):
         qs = self.get_query_set(context)
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
-        comments_remaining = qs.count()
-        context['comments_remaining'] = (comments_remaining - self.get_offset()) > 0 and comments_remaining - self.get_offset() or 0
+        if self.get_offset() > 0:
+            comments_remaining = qs.count()
+            context['comments_remaining'] = (comments_remaining - self.get_offset()) > 0 and comments_remaining - self.get_offset() or 0
         context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level
