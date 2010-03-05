@@ -1,8 +1,7 @@
     {% load i18n %}
     <script type="text/javascript">
     //<![CDATA[
-    
-    var comments_loaded = []
+
     var replies_loaded = []
     var bound_links = []
     
@@ -20,24 +19,6 @@
         
         var posted_re = new RegExp("this_is_a_comment", "g")
         var reply_count_re = new RegExp("(\\d+)")
-
-        function repopulate_loaded_comments() {
-            
-            comments_loaded = []
-            
-            $('.comment').each(function(){                 
-                
-                var classes = $(this).attr('class')
-                var id = $(this).attr('id')
-                
-                var pk = parseInt(comment_pk_re.exec(id)[1])
-                var level = parseInt(comment_level_re.exec(classes)[1])
-                
-                comments_loaded.push({id: id, pk: pk, level: level})
-                
-            })
-            
-        }
         
         function update_replies_count(nxt) {
             var parents = nxt.parents('.comment')
