@@ -9,12 +9,13 @@ register = template.Library()
 
 class BaseMpttCommentNode(BaseCommentNode):
     
-    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, comment=None):
+    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, flat=False, comment=None):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
         self.comment_model = mptt_comments.get_model()
         self.with_parent = with_parent
         self.root_only = root_only
         self.reverse = reverse
+        self.flat = flat
             
     def handle_token(cls, parser, token):
         """
@@ -27,7 +28,7 @@ class BaseMpttCommentNode(BaseCommentNode):
         
         with_parent = None
         extra_kw = {}
-        extra_possible_kw = ('root_only', 'reverse')
+        extra_possible_kw = ('root_only', 'flat', 'reverse')
         for dummy in extra_possible_kw:
             if tokens[-1] in extra_possible_kw:
                 extra_kw[str(tokens.pop())] = True
@@ -113,7 +114,11 @@ class MpttCommentListNode(BaseMpttCommentNode):
                 self.bottom_level = parent.level
             else:
                raise template.TemplateSyntaxError("Variable %s doesn't exist in context" % self.with_parent)
-        if self.root_only:
+
+        if self.flat:
+            qs = qs.order_by('submit_date')
+            return qs
+        elif self.root_only:
             cutoff = 0
 
         return qs.filter(level__lte=cutoff)
