@@ -1,30 +1,21 @@
 import textwrap
 from django import http
 from django.conf import settings
-from django.contrib.comments.views.utils import next_redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
-from django.utils.html import escape
 from django.contrib.auth.decorators import login_required
-import mptt_comments
-from django.contrib.comments import signals
-from mptt_comments.models import MpttComment
+from django.utils.html import escape
 from django.utils import datastructures, simplejson
 
+from django.contrib.comments.views.utils import next_redirect
+from django.contrib.comments.views.comments import CommentPostBadRequest
+from django.contrib.comments import signals
 
-class CommentPostBadRequest(http.HttpResponseBadRequest):
-    """
-    Response returned when a comment post is invalid. If ``DEBUG`` is on a
-    nice-ish error message will be displayed (for debugging purposes), but in
-    production mode a simple opaque 400 page will be displayed.
-    """
-    def __init__(self, why):
-        super(CommentPostBadRequest, self).__init__()
-        if settings.DEBUG:
-            self.content = render_to_string("comments/400-debug.html", {"why": why})
+import mptt_comments
+from mptt_comments.models import MpttComment
 
 def new_comment(request, comment_id=None):
     
