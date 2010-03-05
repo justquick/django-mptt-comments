@@ -159,8 +159,12 @@ class MpttCommentListNode(BaseMpttCommentNode):
         
     def get_context_value_from_queryset(self, context, qs):
         if self.reverse:
-            qs = qs.reverse()
-        return list(qs[:self.get_offset()])
+            qs = qs.order_by('-tree_id', 'lft')
+        offset = self.get_offset()
+        if offset > 0:
+            return list(qs[:offset])
+        # if offset <= 0, don't list(): the developer will use its own pagination system
+        return qs 
         
     def get_offset(self):
         if self.root_only:
