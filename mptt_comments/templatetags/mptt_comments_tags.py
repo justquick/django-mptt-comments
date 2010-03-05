@@ -3,6 +3,7 @@ from django import template
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
+from django.utils.encoding import smart_unicode
 import mptt_comments
 
 register = template.Library()
@@ -94,7 +95,40 @@ class MpttCommentTopLevelCountNode(BaseMpttCommentNode):
     """Insert a count of toplevel comments into the context."""
 
     def get_context_value_from_queryset(self, context, qs):
-        return qs.filter(level=0).count()
+        return qs.filter(level=0).order_by().count()
+        
+class MpttCommentHiddenCountNode(BaseMpttCommentNode):
+
+    """Insert a count of hidden comments into the context."""
+    
+    def get_query_set(self, context):
+        # Copied from django.contrib.comments, but changing the is_public filter
+        # Too bad you can't "unfilter" a queryset... :(
+        
+        ctype, object_pk = self.get_target_ctype_pk(context)
+        if not object_pk:
+            return self.comment_model.objects.none()
+
+        qs = self.comment_model.objects.filter(
+            content_type = ctype,
+            object_pk    = smart_unicode(object_pk),
+            site__pk     = settings.SITE_ID,
+        )
+        
+        # The is_public and is_removed fields are implementation details of the
+        # built-in comment model's spam filtering system, so they might not
+        # be present on a custom comment model subclass. If they exist, we 
+        # should filter on them.
+        field_names = [f.name for f in self.comment_model._meta.fields]
+        if 'is_public' in field_names:
+            qs = qs.filter(is_public=False) # changed line is here
+        if getattr(settings, 'COMMENTS_HIDE_REMOVED', True) and 'is_removed' in field_names:
+            qs = qs.filter(is_removed=False)
+        
+        return qs
+            
+    def get_context_value_from_queryset(self, context, qs):
+        return qs.count()
 
 class MpttCommentListNode(BaseMpttCommentNode):
 
@@ -142,7 +176,22 @@ class MpttCommentListNode(BaseMpttCommentNode):
         context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level
-        return ''  
+        return ''
+        
+def get_mptt_comment_hidden_count(parser, token):
+    """
+    Gets the non public comment count for the given params and populates the template
+    context with a variable containing that value, whose name is defined by the
+    'as' clause.
+
+    Syntax::
+
+        {% get_mptt_comment_hidden_count for [object] as [varname]  %}
+        {% get_mptt_comment_hidden_count for [app].[model] [object_id] as [varname]  %}
+
+    """
+
+    return MpttCommentHiddenCountNode.handle_token(parser, token)
         
 def get_mptt_comment_toplevel_count(parser, token):
     """
@@ -158,7 +207,6 @@ def get_mptt_comment_toplevel_count(parser, token):
     """
 
     return MpttCommentTopLevelCountNode.handle_token(parser, token)
-      
         
 def get_mptt_comment_list(parser, token):
     """
@@ -242,5 +290,6 @@ register.simple_tag(mptt_comments_media)
 register.simple_tag(mptt_comments_media_css)
 register.simple_tag(mptt_comments_media_js)
 register.tag(get_mptt_comment_list)
+register.tag(get_mptt_comment_hidden_count)
 register.tag(get_mptt_comment_toplevel_count)
 register.simple_tag(display_comment_toplevel_for)
