@@ -23,7 +23,7 @@ def new_comment(request, comment_id=None):
     if not comment_id:
         return CommentPostBadRequest("Missing comment id.")
         
-    parent_comment = MpttComment.objects.get(pk=comment_id)
+    parent_comment = get_model().objects.get(pk=comment_id)
     
     target = parent_comment.content_object
     model = target.__class__
@@ -78,7 +78,7 @@ def post_comment(request, next=None):
         model = models.get_model(*ctype.split(".", 1))
         target = model._default_manager.get(pk=object_pk)
         if parent_pk:
-            parent_comment = MpttComment.objects.get(pk=parent_pk)
+            parent_comment = get_model().objects.get(pk=parent_pk)
     except TypeError:
         return CommentPostBadRequest(
             "Invalid content_type value: %r" % escape(ctype))
@@ -219,14 +219,14 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
 
 def comments_more(request, from_comment_pk, restrict_to_tree=False):
 
-    comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)
+    comment = get_model().objects.select_related('content_type').get(pk=from_comment_pk)
 
     offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
     collapse_above = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
     cutoff_level = getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = 0
              
-    qs = MpttComment.objects.filter_hidden_comments().filter(
+    qs = get_model().objects.filter_hidden_comments().filter(
         content_type=comment.content_type,
         object_pk=comment.object_pk,
         lft__gte=comment.lft+1,
@@ -277,12 +277,12 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False):
     
 def comments_subtree(request, from_comment_pk, include_self=None, include_ancestors=None):
     
-    comment = MpttComment.objects.select_related('content_type').get(pk=from_comment_pk)     
+    comment = get_model().objects.select_related('content_type').get(pk=from_comment_pk)     
     
     cutoff_level = comment.level + getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = not include_ancestors and (comment.level - (include_self and 1 or 0)) or 0
     
-    qs = MpttComment.objects.filter_hidden_comments().filter(
+    qs = get_model().objects.filter_hidden_comments().filter(
         tree_id=comment.tree_id, 
         lft__gte=comment.lft + (not include_self and 1 or 0),
         lft__lte=comment.rght,
