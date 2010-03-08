@@ -167,7 +167,8 @@ def confirmation_view(template, doc="Display a confirmation view.", is_ajax=Fals
                 pass
         return render_to_response(template, {
                 'comment': comment,
-                'is_ajax': is_ajax
+                'is_ajax': is_ajax,
+                'success' : True
             },
             context_instance=RequestContext(request)
         )
@@ -186,7 +187,7 @@ def confirmation_view(template, doc="Display a confirmation view.", is_ajax=Fals
 comment_done_ajax = confirmation_view(
     template = "comments/posted_ajax.html",
     doc = """Display a "comment was posted" success page.""",
-    is_ajax = True
+    is_ajax = True,
 )
 
 comment_done = confirmation_view(

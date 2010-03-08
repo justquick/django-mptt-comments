@@ -9,7 +9,7 @@
         {% endif %}
     {% endif %}
 
-    <div class="comment comment_level_{{ comment.level }} {% if_greater comment.level collapse_levels_above %} comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}" id="comment_{{ comment.pk }}">
+    <div class="comment comment_level_{{ comment.level }} {% if post_was_successful %}comment_expanded{% endif %} {% if_greater comment.level collapse_levels_above %}comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}" id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
         
     <p class="comment_title">
