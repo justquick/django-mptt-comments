@@ -3,7 +3,6 @@
     //<![CDATA[
 
     var replies_loaded = []
-    var bound_links = []
     
     function is_in(list, item) {
         for (var i=0;i<list.length;i++) {
@@ -61,8 +60,7 @@
                         }
                         else {
                             update_replies_count(nxt)
-                            nxt.replaceWith(data)                                
-                            bind_replies()
+                            nxt.replaceWith(data)
                         }
                     }
                     else {
@@ -78,103 +76,80 @@
                 return false
             })
         }
+                
+        $('a.comment_reply').live("click", function(e) {
+            
+            var parent = $(this).parent('p');
+            var nxt = parent.next('.comment_form_wrapper');
+            if (!nxt.length) {
+                nxt = $('<div class="comment_form_wrapper"></div>').insertAfter(parent);
+                nxt.hide();
+            }
+            else {
+                nxt.slideUp("slow")
+            }
+            
+            $.get($(this).attr('href') + '?is_ajax=1', function(data, textStatus){
+                nxt.empty()
+                nxt.append(data)
+                nxt.slideDown("slow")
+                
+                var form = $("form", nxt)
+                bind_submit(form, nxt)
+                
+            }, "html")
+            
+            return false
+        })
         
-        // FIXME: not cool for performance, try to use .live()
-        function bind_replies() {
-                
-            $('.comment_reply, .comment_new').each(function() {
-            
-                var reply_link = $(this)    
-                var parent = reply_link.parent('p')
-                
-                parent.after('<div class="comment_form_wrapper"></div>')
-                
-                $(this).bind("click", function(e) {
-                
-                    $('.comment_form_wrapper').slideUp("slow")
-                    
-                    $.get(reply_link.attr('href') + '?is_ajax=1', function(data, textStatus){
-                        var nxt = parent.next('.comment_form_wrapper')
-                        nxt.empty()
-                        nxt.append(data)
-                        nxt.slideDown("slow")
                         
-                        var form = $("form", nxt)
-                        bind_submit(form, nxt)
-                        
-                    }, "html")
-                    
-                    return false
-                })
-            })
-            
-                            
-            $('a.comment_replies').each(function() {
-            
-                var replies_link = $(this)    
+        $('a.comment_replies').live("click", function(e) {
                 
-                replies_link.bind("click", function(e) {
+            var href = $(this).attr('href')
+            
+            var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
+            
+            if (!is_in(replies_loaded, id)) {
+            
+                $.get($(this).attr('href') + '?is_ajax=1', {}, function(data, textStatus){
                     
-                    var href = replies_link.attr('href')
-                    
-                    var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
-                    
-                    if (!is_in(replies_loaded, id)) {
-                    
-                        $.get($(this).attr('href') + '?is_ajax=1', {}, function(data, textStatus){
-                            
-                            var comments_tree = data.comments_tree
+                    var comments_tree = data.comments_tree
 
-                            if (comments_tree) {  // 
-                                $('#' + id).append( comments_tree.html )
-                            }
-                            
-                            bind_replies()
-                                
-                        }, "json")
-                        
-                        replies_loaded.push(id)
+                    if (comments_tree) {  // 
+                        $('#' + id).append( comments_tree.html )
                     }
-                    return false
-                })
-            })
+                    
+                    replies_loaded.push(id)
+                        
+                }, "json")
+            }
+            return false
+        })
             
-            $('.comment_expand').each(function() {
+        $('.comment_expand').live("click", function() { 
             
-                var expand_link = $(this)    
-                
-                var href = expand_link.attr('href')    
-                var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
-                
-                var comment_el = $('#' + id)
-                var content_el = $('.comment_content', comment_el)
-                
-                if (!is_in(bound_links, id)) {
-                    expand_link.bind("click", function(e) {
-                            
-                        if (content_el.hasClass('comment_collapsed_below')) {
-                            content_el.removeClass('comment_collapsed_below')
-                            comment_el.addClass('comment_expanded')
-                        }
-                        else {
-                            if (comment_el.hasClass('comment_collapsed')) {
-                                comment_el.removeClass('comment_collapsed')
-                                comment_el.addClass('comment_expanded')
-                            }
-                            else {
-                                comment_el.addClass('comment_collapsed')
-                                comment_el.removeClass('comment_expanded')
-                            } 
-                        }
-                        return false
-                    })
-                
-                    bound_links.push(id)
+            var href = $(this).attr('href')    
+            var id = 'comment_' + (new RegExp("(\\d+)/$").exec(href)[1])
+            
+            var comment_el = $('#' + id)
+            var content_el = $('.comment_content', comment_el)
+                        
+            if (content_el.hasClass('comment_collapsed_below')) {
+                content_el.removeClass('comment_collapsed_below')
+                comment_el.addClass('comment_expanded')
+            }
+            else {
+                if (comment_el.hasClass('comment_collapsed')) {
+                    comment_el.removeClass('comment_collapsed')
+                    comment_el.addClass('comment_expanded')
                 }
-                
-            })
-            
-        }
+                else {
+                    comment_el.addClass('comment_collapsed')
+                    comment_el.removeClass('comment_expanded')
+                } 
+            }
+            return false
+        })
 
         $('.comments_more').live("click", function() {
             
@@ -219,9 +194,7 @@
                 else {
                      more.parent().hide()
                 }
-                
-               bind_replies()
-                
+
             }, "json")
             
             return false
@@ -231,11 +204,7 @@
             var nxt = $(this)
             var frm = $('form', nxt)
             bind_submit(frm, nxt) 
-        })
-        
-        bind_replies() // intercept links        
-
-        
+        })        
     })
     //]]>
     </script>
