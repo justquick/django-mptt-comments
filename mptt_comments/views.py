@@ -242,7 +242,9 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False):
         # Here we need all nodes with a different root-id, or all nodes with
         # the same root-id and a greater lft value. 
         # The default order should do the right thing
-        part2 = ~Q(tree_id=comment.tree_id)
+        # 
+        # FIXME: it expects tree_id to be in chronological order!
+        part2 = Q(tree_id__gt=comment.tree_id)
         qs = qs.filter(part1 | part2)
         
     until_toplevel = []
