@@ -2,7 +2,7 @@
 {% if comments_remaining %}
 <p>
     {% with comments|last as last_comment %}
-    <a id="comments_more" href="{% url comments-more last_comment.pk %}">
+    <a class="comments_more" href="{% url comments-more last_comment.pk %}">
         {% trans "Still" %} <span id="comments_more_remaining">{{ comments_remaining }}</span> {% trans "comments left" %}
     </a>
     {% endwith %}
