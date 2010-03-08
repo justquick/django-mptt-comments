@@ -16,6 +16,8 @@ class BaseMpttCommentNode(BaseCommentNode):
         self.root_only = root_only
         self.reverse = reverse
         self.flat = flat
+        if self.reverse and not self.root_only:
+            raise template.TemplateSyntaxError("'reverse' option is only available with root-only ('comments-more' link at toplevel expects normal order)")
             
     def handle_token(cls, parser, token):
         """
