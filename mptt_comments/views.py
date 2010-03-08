@@ -3,6 +3,7 @@ from django import http
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
@@ -230,12 +231,19 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False):
     qs = get_model().objects.filter_hidden_comments().filter(
         content_type=comment.content_type,
         object_pk=comment.object_pk,
-        lft__gte=comment.lft+1,
         level__lte=cutoff_level
     )
     
+    part1 = Q(tree_id=comment.tree_id) & Q(lft__gte=comment.lft + 1)
     if restrict_to_tree:
-        qs = qs.filter(tree_id=comment.tree_id)
+        # Here we only want the nodes with the same root-id and a greater lft value. 
+        qs = qs.filter(part1)
+    else:
+        # Here we need all nodes with a different root-id, or all nodes with
+        # the same root-id and a greater lft value. 
+        # The default order should do the right thing
+        part2 = ~Q(tree_id=comment.tree_id)
+        qs = qs.filter(part1 | part2)
         
     until_toplevel = []
     remaining = []
