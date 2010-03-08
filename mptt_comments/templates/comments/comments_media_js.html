@@ -161,8 +161,8 @@
                 var morep = more.parent()
 
                 if (comments_for_update) {
-                    var len = comments_for_update.length;
-                    for (var c = 0; c < len; c++) {
+                    var update_len = comments_for_update.length;
+                    for (var c = 0; c < update_len; c++) {
                         var comment = comments_for_update[c]
                         if ("parent" in comment) {
                             if (comment.parent == tid && morep) {
@@ -182,17 +182,24 @@
 
                 var remaining_count = data.remaining_count
 
-                if (remaining_count > 0 && comments_for_update) {
+                if (remaining_count > 0) {
                     $('#comment_' + tid + ' .comments_more_remaining').html(remaining_count)
+
+                    if (update_len) {
+                        var last_comment_pk = comments_for_update[update_len - 1].pk
+                    } 
+                    else {
+                        var last_comment_pk = comments_tree.end_pk
+                    }
                     
                     var old_href = more.attr('href')
                     more.attr('href', 
-                        old_href.replace(new RegExp("\\d+/$"), 
-                        comments_for_update[len - 1].pk + '/')
+                        old_href.replace(new RegExp("\\d+/$"),
+                        last_comment_pk + '/')
                     )
                 }
                 else {
-                     more.parent().hide()
+                     morep.hide()
                 }
 
             }, "json")

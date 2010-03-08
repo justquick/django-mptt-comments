@@ -265,6 +265,8 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False):
     json_data = {'remaining_count': remaining_count, 'comments_for_update': [], 'comments_tree': {} }
     if restrict_to_tree:
         json_data['tid'] = comment.get_root().id
+    else:
+        json_data['tid'] = 0
     
     for comment in until_toplevel:    
         json_comment = {'level': comment.level, 'pk': comment.pk, 'parent' : comment.parent_id}
