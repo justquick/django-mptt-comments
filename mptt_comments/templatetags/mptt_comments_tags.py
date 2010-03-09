@@ -145,18 +145,31 @@ class MpttCommentListNode(BaseMpttCommentNode):
         if self.with_parent:
             if self.with_parent in context:
                 parent = context[self.with_parent]
+            else:
+                try:
+                    parent = int(self.with_parent)
+                except ValueError:
+                    raise template.TemplateSyntaxError("'%s' doesn't represent a known variable in the context or a tree_id" % self.with_parent)
+
+            if isinstance(parent, int):
+                # Interpret parent as a tree_id
+                self.bottom_level = 1
+                qs = qs.filter(tree_id=parent, level__gte=self.bottom_level)
+            else:
+                # Interpret parent as a comment object
                 qs = qs.filter(tree_id=parent.tree_id, lft__gt=parent.lft, rght__lt=parent.rght)
                 self.bottom_level = parent.level
-            else:
-               raise template.TemplateSyntaxError("Variable %s doesn't exist in context" % self.with_parent)
 
         if self.flat:
             qs = qs.order_by('submit_date')
             return qs
         elif self.root_only:
             cutoff = 0
-
-        return qs.filter(level__lte=cutoff)
+            
+        if cutoff >= 0:
+            qs = qs.filter(level__lte=cutoff)
+        
+        return qs
         
     def get_context_value_from_queryset(self, context, qs):
         if self.reverse:
