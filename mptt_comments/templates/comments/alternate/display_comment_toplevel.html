@@ -33,6 +33,10 @@
                 {{ comment.comment|linebreaks }}
             {% endif %}
             
+            {% if debug %}
+                {% include "comments/_comment_debug.html" %}
+            {% endif %}
+            
             {% include "comments/_comment_replies.html" %}
             {% ifequal comment.level 0 %}
                 {% if comment|children_count %}
