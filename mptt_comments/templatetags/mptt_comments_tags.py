@@ -5,12 +5,13 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 from django.utils.encoding import smart_unicode
+from django.db.models import Max, Count
 
 register = template.Library()
 
 class BaseMpttCommentNode(BaseCommentNode):
     
-    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, flat=False, comment=None):
+    def __init__(self, ctype=None, object_pk_expr=None, object_expr=None, as_varname=None, root_only=False, with_parent=None, reverse=False, flat=False, comment=None, **kwargs):
         super(BaseMpttCommentNode, self). __init__(ctype=ctype, object_pk_expr=object_pk_expr, object_expr=object_expr, as_varname=as_varname, comment=comment)
         self.with_parent = with_parent
         self.root_only = root_only
@@ -30,10 +31,12 @@ class BaseMpttCommentNode(BaseCommentNode):
         
         with_parent = None
         extra_kw = {}
-        extra_possible_kw = ('root_only', 'flat', 'reverse')
+        extra_possible_kw = ('root_only', 'flat', 'reverse', 'sort=mostcommented', 'sort=mostrecentreplies')
         for dummy in extra_possible_kw:
             if tokens[-1] in extra_possible_kw:
-                extra_kw[str(tokens.pop())] = True
+                split = str(tokens.pop()).split('=')
+                key = split[0]
+                extra_kw[key] = len(split) > 1 and split[1] or True
 
         if tokens[1] != 'for':
             raise template.TemplateSyntaxError("Second argument in %r tag must be 'for'" % tokens[0])
@@ -130,7 +133,7 @@ class MpttCommentHiddenCountNode(BaseMpttCommentNode):
             
     def get_context_value_from_queryset(self, context, qs):
         return qs.count()
-
+        
 class MpttCommentListNode(BaseMpttCommentNode):
 
     offset = getattr(settings, 'MPTT_COMMENTS_OFFSET', 20)
@@ -152,9 +155,10 @@ class MpttCommentListNode(BaseMpttCommentNode):
                     raise template.TemplateSyntaxError("'%s' doesn't represent a known variable in the context or a tree_id" % self.with_parent)
 
             if isinstance(parent, int):
-                # Interpret parent as a tree_id
-                self.bottom_level = 1
-                qs = qs.filter(tree_id=parent, level__gte=self.bottom_level)
+                # Interpret parent as a tree_id. 
+                # Note: in this mode, we include the corresponding root-node too
+                self.bottom_level = -1
+                qs = qs.filter(tree_id=parent)
             else:
                 # Interpret parent as a comment object
                 qs = qs.filter(tree_id=parent.tree_id, lft__gt=parent.lft, rght__lt=parent.rght)
@@ -197,6 +201,27 @@ class MpttCommentListNode(BaseMpttCommentNode):
         context['bottom_level'] = self.bottom_level
         return ''
         
+class MpttSpecialTreeListNode(MpttCommentListNode):
+
+    def __init__(self, sort=None, **kwargs):
+        super(MpttSpecialTreeListNode, self).__init__(**kwargs)
+        self.sort = sort
+        
+        # Just to be sure, overwrite those, which shouldn't be used, they would
+        # mess with our special queries
+        self.with_parent = None
+        self.flat = False
+        self.root_only = False
+   
+    def get_query_set(self, context):
+        qs = super(MpttSpecialTreeListNode, self).get_query_set(context)
+        
+        if self.sort == 'mostcommented':
+            qs = qs.values_list('tree_id', flat=True).filter(level=0).order_by('-rght')                
+        elif self.sort == 'mostrecentreplies':
+            qs = qs.values_list('tree_id', flat=True).annotate(max_date=Max('submit_date')).order_by('-max_date')
+        return qs
+
 def get_mptt_comment_hidden_count(parser, token):
     """
     Gets the non public comment count for the given params and populates the template
@@ -226,6 +251,17 @@ def get_mptt_comment_toplevel_count(parser, token):
     """
 
     return MpttCommentTopLevelCountNode.handle_token(parser, token)
+    
+def get_mptt_comments_threads(parser, token):
+    """
+    Gets the list of threads for the given params and populates the template
+    context with a variable containing that value, whose name is defined by the
+    'as' clause.
+    
+    Note: This list just contains the tree_ids of each thread
+    """
+    return MpttSpecialTreeListNode.handle_token(parser, token)
+
         
 def get_mptt_comment_list(parser, token):
     """
@@ -309,6 +345,7 @@ register.simple_tag(mptt_comments_media)
 register.simple_tag(mptt_comments_media_css)
 register.simple_tag(mptt_comments_media_js)
 register.tag(get_mptt_comment_list)
+register.tag(get_mptt_comments_threads)
 register.tag(get_mptt_comment_hidden_count)
 register.tag(get_mptt_comment_toplevel_count)
 register.simple_tag(display_comment_toplevel_for)
