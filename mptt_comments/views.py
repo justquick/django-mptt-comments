@@ -238,6 +238,7 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False):
     if restrict_to_tree:
         # Here we only want the nodes with the same root-id and a greater lft value. 
         qs = qs.filter(part1)
+        bottom_level = comment.level + 1
     else:
         # Here we need all nodes with a different root-id, or all nodes with
         # the same root-id and a greater lft value. 

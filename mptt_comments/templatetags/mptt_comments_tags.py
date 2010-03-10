@@ -157,12 +157,12 @@ class MpttCommentListNode(BaseMpttCommentNode):
             if isinstance(parent, int):
                 # Interpret parent as a tree_id. 
                 # Note: in this mode, we include the corresponding root-node too
-                self.bottom_level = -1
+                self.bottom_level = 0
                 qs = qs.filter(tree_id=parent)
             else:
                 # Interpret parent as a comment object
                 qs = qs.filter(tree_id=parent.tree_id, lft__gt=parent.lft, rght__lt=parent.rght)
-                self.bottom_level = parent.level
+                self.bottom_level = parent.level + 1
 
         if self.flat:
             qs = qs.order_by('submit_date')
