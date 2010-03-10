@@ -193,9 +193,23 @@ class MpttCommentListNode(BaseMpttCommentNode):
     def render(self, context):
         qs = self.get_query_set(context)
         context[self.as_varname] = self.get_context_value_from_queryset(context, qs)
+        
+        # 'Remaining comments' : if offset is <= 0, we don't handle those
         if self.get_offset() > 0:
             comments_remaining = qs.count()
-            context['comments_remaining'] = (comments_remaining - self.get_offset()) > 0 and comments_remaining - self.get_offset() or 0
+            comments_remaining = (comments_remaining - self.get_offset()) > 0 and comments_remaining - self.get_offset() or 0
+            
+            # If we have a parent, then we need to update the subcomments_remaining to paginate
+            # each thread independantly.
+            if self.with_parent:
+                context['subcomments_remaining'] = comments_remaining
+            else:
+                context['subcomments_remaining'] = 0
+                context['comments_remaining'] = comments_remaining
+        else:
+            context['comments_remaining'] = 0
+            context['subcomments_remaining'] = 0
+            
         context['collapse_levels_above'] = getattr(settings, 'MPTT_COMMENTS_COLLAPSE_ABOVE', 2)
         context['cutoff_level'] = self.cutoff_level
         context['bottom_level'] = self.bottom_level
