@@ -9,7 +9,7 @@
         {% endif %}
     {% endif %}
 
-    <div class="comment comment_level_{{ comment.level }} {% if post_was_successful %}comment_expanded{% endif %} {% if_greater comment.level collapse_levels_above %}comment_collapsed{% endif_greater %} {% if comment.is_removed %}is_removed{% endif %}" id="comment_{{ comment.pk }}">
+    <div class="comment comment_level_{{ comment.level }} {% mptt_comment_print_collapse_state comment %} {% if comment.is_removed %}is_removed{% endif %}" id="comment_{{ comment.pk }}">
     <!-- this_is_a_comment -->
         
     <p class="comment_title">
@@ -22,7 +22,7 @@
         </a>
     </p>
     
-    <div class="comment_content {% if_less comment.level collapse_levels_below %} comment_collapsed_below{% endif_less %}">
+    <div class="comment_content">
         
     <p class="comment_meta">
         <span class="commented_by">{% trans "Commented by" %} {{ comment.name }}</span> -

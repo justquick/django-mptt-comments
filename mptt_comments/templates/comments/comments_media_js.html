@@ -134,19 +134,13 @@
             var comment_el = $('#' + id)
             var content_el = $('.comment_content', comment_el)
                         
-            if (content_el.hasClass('comment_collapsed_below')) {
-                content_el.removeClass('comment_collapsed_below')
+            if (comment_el.hasClass('comment_collapsed')) {
+                comment_el.removeClass('comment_collapsed')
                 comment_el.addClass('comment_expanded')
             }
             else {
-                if (comment_el.hasClass('comment_collapsed')) {
-                    comment_el.removeClass('comment_collapsed')
-                    comment_el.addClass('comment_expanded')
-                }
-                else {
-                    comment_el.addClass('comment_collapsed')
-                    comment_el.removeClass('comment_expanded')
-                } 
+                comment_el.addClass('comment_collapsed')
+                comment_el.removeClass('comment_expanded')
             }
             return false
         })

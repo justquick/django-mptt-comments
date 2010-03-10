@@ -351,9 +351,40 @@ def display_comment_toplevel_for(target):
         } 
         # RequestContext(context['request'], {})
     )
-    
+
+class MpttCommentCollapseState(template.Node):
+    def __init__(self, token):
+        tokens = token.contents.split()
+        
+        if len(tokens) < 2:
+            raise template.TemplateSyntaxError("%s takes one argument" % tokens[0])
+        
+        self.varname = tokens[1]
+
+    def render(self, context):
+        if not self.varname in context:
+            raise template.TemplateSyntaxError("%s is an invalid context variable" % self.varname)
+        
+        comment = context[self.varname]
+        collapse_levels_above = 'collapse_levels_above' in context and context['collapse_levels_above'] or 1e308
+        collapse_levels_below = 'collapse_levels_below' in context and context['collapse_levels_below'] or -1e308        
+        
+        classname = ""
+        
+        if 'post_was_successful' in context:
+            return "comment_expanded"
+        else:
+            if comment.level > collapse_levels_above or comment.level < collapse_levels_below:
+                return "comment_collapsed"
+            return "comment_expanded"
+
+def mptt_comment_print_collapse_state(parser, token):
+
+    return MpttCommentCollapseState(token)
+
 register.filter(children_count)
 register.tag(get_mptt_comment_form)
+register.tag(mptt_comment_print_collapse_state)
 register.simple_tag(mptt_comment_form_target)
 register.simple_tag(mptt_comments_media)
 register.simple_tag(mptt_comments_media_css)
