@@ -18,5 +18,8 @@
         </a> |
         <a class="comment_reply" href="{% url comment-reply comment.pk %}">
             {% trans "Reply to this comment" %}
+        </a> |
+        <a class="comment_flag" href="{% url comments-flag comment.pk %}">
+            {% trans "Flag this comment" %}
         </a>
     </p>
