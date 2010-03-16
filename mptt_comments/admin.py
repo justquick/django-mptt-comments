@@ -4,7 +4,6 @@ from mptt_comments.models import MpttComment
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.comments.models import Comment
 from django.contrib.contenttypes.models import ContentType
-from mat.models import Foo
 
 class MpttCommentsAdmin(admin.ModelAdmin):
     fieldsets = (
