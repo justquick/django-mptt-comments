@@ -13,18 +13,20 @@ class MpttCommentManager(CommentManager):
             'parent':None,
             'content_type':ctype,
             'object_pk':str(object_pk),
-            'defaults':{
-                'comment': 'Root comment placeholder',
-                'user_name': 'Noname',
-                'user_email': 'no@user.no',
-                'user_url': '',
-                'submit_date': datetime.datetime.now(),
-                'site_id': settings.SITE_ID
-            }
+   
         }
+        defaults = {
+            'comment': 'Root comment placeholder',
+            'user_name': 'Noname',
+            'user_email': 'no@user.no',
+            'user_url': '',
+            'submit_date': datetime.datetime.now(),
+            'site_id': settings.SITE_ID
+        }        
         try:
             return self.model.objects.filter(**lookup)[0]
         except IndexError:
+            lookup.update(defaults)
             return self.model.objects.create(**lookup)
 
 class MpttComment(Comment):
