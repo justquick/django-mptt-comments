@@ -29,6 +29,7 @@
                   <input type="submit" name="preview" class="submit-preview" value="{% trans 'Preview' %}">
                 </li>
             </ul>
+            {% csrf_token %}
         </fieldset>
     </form>
     </div>
