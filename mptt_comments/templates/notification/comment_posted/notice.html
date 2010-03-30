@@ -1,0 +1,2 @@
+{% load i18n %}{% url profile_detail username=user.username as user_url %}
+{% blocktrans with comment.get_absolute_url as comment_url %}You have posted a <a href="{{ comment_url }}">new comment</a> on <em><a href="#">{{ object }}</a></em>.{% endblocktrans %}
