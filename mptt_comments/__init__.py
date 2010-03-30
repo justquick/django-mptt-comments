@@ -53,15 +53,17 @@ def comment_callback_for_notification(sender, request=None, comment=None, **kwar
     # Notifications of stuff I'm doing
     notification.send([user], "comment_%s" % (notice_type_suffix, ), infodict)
     
-    # Notifications to my friends and/or my followers
+    # Notifications to my friends and/or my followers, except the author of the
+    # parent comment, since he'll receive a separate notice anyway
     if friends:
         notification.send((x['friend'] for x in
-            Friendship.objects.friends_for_user(request.user)),
+            Friendship.objects.friends_for_user(request.user) if x['friend'] != comment.parent.user),
             "comment_friend_%s" % (notice_type_suffix, ), infodict
         )
     if relationships:
-        notification.send(request.user.relationships.followers(),
-            "comment_friend_%s" % (notice_type_suffix, ), infodict
-        )
+        followers = request.user.relationships.followers()
+        if comment.parent and comment.parent.user:
+            followers = followers.exclude(username=comment.parent.user.username)
+        notification.send(followers, "comment_friend_%s" % (notice_type_suffix, ), infodict)
 
 comment_was_posted.connect(comment_callback_for_notification)
