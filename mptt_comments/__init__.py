@@ -60,7 +60,6 @@ def comment_callback_for_notification(sender, request=None, comment=None, **kwar
             "comment_friend_%s" % (notice_type_suffix, ), infodict
         )
     if relationships:
-        print infodict
         notification.send(request.user.relationships.followers(),
             "comment_friend_%s" % (notice_type_suffix, ), infodict
         )
