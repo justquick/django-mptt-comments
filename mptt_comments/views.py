@@ -17,7 +17,7 @@ from django.contrib.comments import signals, get_form, get_model
 
 from mptt_comments.models import MpttComment
 
-def new_comment(request, comment_id=None):
+def new_comment(request, comment_id=None, *args, **kwargs):
     
     is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
     
@@ -45,7 +45,7 @@ def new_comment(request, comment_id=None):
     )
 
 @login_required
-def post_comment(request, next=None):
+def post_comment(request, next=None, *args, **kwargs):
     """
     Post a comment.
 
@@ -154,7 +154,7 @@ def post_comment(request, next=None):
     
     return next_redirect(data, next, 'comments-comment-done%s' % (is_ajax and '-ajax' or ''), c=comment._get_pk_val())
     
-def confirmation_view(template, doc="Display a confirmation view.", is_ajax=False):
+def confirmation_view(template, doc="Display a confirmation view.", is_ajax=False, *args, **kwargs):
     """
     Confirmation view generator for the "comment was
     posted/flagged/deleted/approved" views.
@@ -219,7 +219,7 @@ def comment_tree_json(request, object_list, tree_id, cutoff_level, bottom_level)
         return json_comments
     return {}
 
-def comments_more(request, from_comment_pk, restrict_to_tree=False):
+def comments_more(request, from_comment_pk, restrict_to_tree=False, *args, **kwargs):
 
     comment = get_model().objects.select_related('content_type').get(pk=from_comment_pk)
 
@@ -289,7 +289,7 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False):
     
     return http.HttpResponse(simplejson.dumps(json_data), mimetype='application/json')
     
-def comments_subtree(request, from_comment_pk, include_self=None, include_ancestors=None):
+def comments_subtree(request, from_comment_pk, include_self=None, include_ancestors=None, *args, **kwargs):
     
     comment = get_model().objects.select_related('content_type').get(pk=from_comment_pk)     
     
