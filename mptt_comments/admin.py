@@ -22,7 +22,8 @@ class MpttCommentsAdmin(admin.ModelAdmin):
     date_hierarchy = 'submit_date'
     ordering = ('-submit_date',)
     search_fields = ('comment', 'user__username', 'user_name', 'user_email', 'user_url', 'ip_address')
-
+    raw_id_fields = ('user',)
+    
     def queryset(self, request):
         return MpttComment.objects.filter(parent__isnull=False)
 
