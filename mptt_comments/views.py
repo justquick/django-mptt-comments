@@ -8,6 +8,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.template.loader import render_to_string
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from django.utils.html import escape
 from django.utils import datastructures, simplejson
 
@@ -337,3 +338,15 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
             }, 
             RequestContext(request, {})
         )
+
+def count_for_object(request, content_type_id, object_pk, mimetype='text/plain'):
+    """
+    Returns the comment count for any object defined by content_type_id and object_id or slug.
+    Mimetype defaults to plain text.
+    """
+    try:
+        ctype = ContentType.objects.get_for_id(content_type_id)
+    except ObjectDoesNotExist:
+        raise Http404("No content found for id %s" % content_type_id)
+    count = str(MpttComment.objects.filter(object_pk=object_pk, content_type=ctype).count())
+    return HttpResponse(count, mimetype = mimetype)
