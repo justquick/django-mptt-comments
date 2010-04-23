@@ -18,9 +18,6 @@ class MpttCommentForm(CommentForm):
         
         self.fields.keyOrder = [
             'title',
-            'name',
-            'email',
-            'url',
             'comment',
             'honeypot',
             'content_type',
@@ -54,31 +51,19 @@ class MpttCommentForm(CommentForm):
         new = MpttComment(
             content_type = ContentType.objects.get_for_model(self.target_object),
             object_pk    = force_unicode(self.target_object._get_pk_val()),
-            user_name    = self.cleaned_data["name"],
-            user_email   = self.cleaned_data["email"],
-            user_url     = self.cleaned_data["url"],
+            user_name    = "",  # self.cleaned_data["name"],
+            user_email   = "",   # self.cleaned_data["email"],
+            user_url     = "",     # self.cleaned_data["url"],
             comment      = self.cleaned_data["comment"],
             submit_date  = datetime.datetime.now(),
             site_id      = settings.SITE_ID,
-            is_public    = True,
+            is_public    = parent_comment and parent_comment.is_public or True,
             is_removed   = False,
-            title = self.cleaned_data["title"],
-            parent = parent_comment
+            title        = self.cleaned_data["title"],
+            parent       = parent_comment
         )
 
-        # Check that this comment isn't duplicate. (Sometimes people post comments
-        # twice by mistake.) If it is, fail silently by returning the old comment.
-        possible_duplicates = MpttComment.objects.filter(
-            content_type = new.content_type,
-            object_pk = new.object_pk,
-            user_name = new.user_name,
-            user_email = new.user_email,
-            user_url = new.user_url,
-            parent = parent_comment
-        )
-        for old in possible_duplicates:
-            if old.submit_date.date() == new.submit_date.date() and old.comment == new.comment:
-                return old
+	# FIXME: maybe re-implement duplicate checking later
 
         return new
         
@@ -91,7 +76,7 @@ class MpttCommentForm(CommentForm):
             'timestamp'     : str(timestamp),
             'security_hash' : self.initial_security_hash(timestamp),
             'parent_pk'     : self.parent_comment and str(self.parent_comment.pk) or '',
-            'title'         : self.parent_comment.level == 0 and force_unicode(self.target_object) or
+            'title'         : not self.parent_comment and force_unicode(self.target_object) or
                                 u'%s%s' % ( (self.parent_comment.title[:3] != u'Re:') and 'Re: '  or u'', self.parent_comment.title)
         }
         
