@@ -25,9 +25,6 @@ class MpttCommentsAdmin(admin.ModelAdmin):
     ordering = ('-submit_date',)
     search_fields = ('comment', 'user__username', 'user_name', 'user_email', 'user_url', 'ip_address')
     
-    def queryset(self, request):
-        return MpttComment.objects.filter(parent__isnull=False)
-
     def getobject(self, obj):
         try:
             object_type = ContentType.objects.get(model=str(obj.content_type))
