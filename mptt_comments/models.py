@@ -47,6 +47,11 @@ class MpttComment(Comment):
     title = models.CharField(max_length=60)
     parent = models.ForeignKey('self', related_name='children', blank=True, null=True)
     
+    def save(self, *a, **kw):
+        if not self.ip_address:
+            self.ip_address = '0.0.0.0'
+        super(MpttComment, self).save(*a, **kw)
+    
     class Meta:
         ordering = ('tree_id', 'lft')
     
