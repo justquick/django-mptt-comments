@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from django.utils.html import escape
 from django.utils import datastructures, simplejson
+from django.http import Http404
 
 from django.contrib.comments.views.utils import next_redirect
 from django.contrib.comments.views.comments import CommentPostBadRequest
