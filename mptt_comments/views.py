@@ -340,7 +340,7 @@ def comments_subtree(request, from_comment_pk, include_self=None, include_ancest
             RequestContext(request, {})
         )
 
-def count_for_object(request, content_type_id, object_pk, mimetype='text/plain'):
+def count_for_objects(request, content_type_id):
     """
     Returns the comment count for any object defined by content_type_id and object_id or slug.
     Mimetype defaults to plain text.
@@ -349,5 +349,7 @@ def count_for_object(request, content_type_id, object_pk, mimetype='text/plain')
         ctype = ContentType.objects.get_for_id(content_type_id)
     except ObjectDoesNotExist:
         raise Http404("No content found for id %s" % content_type_id)
-    count = str(MpttComment.objects.filter(object_pk=object_pk, content_type=ctype).count())
-    return HttpResponse(count, mimetype = mimetype)
+    pks = request.REQUEST.getlist('pk')
+    response = simplejson.dumps(dict(zip(pks,
+        [MpttComment.objects.filter(object_pk=p, content_type=ctype).count() for p in pks])))
+    return HttpResponse(response, mimetype='application/json')
