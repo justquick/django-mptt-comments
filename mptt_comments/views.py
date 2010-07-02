@@ -19,6 +19,16 @@ from django.contrib.comments import signals, get_form, get_model
 
 from mptt_comments.models import MpttComment
 
+def get_ip(request):
+    """
+    Gets the true client IP address of the request
+    Contains proxy handling involving HTTP_X_FORWARDED_FOR and multiple addresses
+    """
+    ip = request.META.get('REMOTE_ADDR',None)
+    if (not ip or ip == '127.0.0.1') and 'HTTP_X_FORWARDED_FOR' in request.META:
+        ip = request.META['HTTP_X_FORWARDED_FOR']
+    return ip.replace(',','').split()[0] # choose first of (possibly) multiple values
+
 def new_comment(request, comment_id=None, *args, **kwargs):
     
     is_ajax = request.GET.get('is_ajax') and '_ajax' or ''
@@ -131,7 +141,7 @@ def post_comment(request, next=None, *args, **kwargs):
 
     # Otherwise create the comment
     comment = form.get_comment_object()
-    comment.ip_address = request.META.get("REMOTE_ADDR", None)
+    comment.ip_address = get_ip(request)
     comment.user = request.user
 
     # Signal that the comment is about to be saved
