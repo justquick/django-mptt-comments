@@ -303,7 +303,10 @@ def comments_more(request, from_comment_pk, restrict_to_tree=False, *args, **kwa
     
 def comments_subtree(request, from_comment_pk, include_self=None, include_ancestors=None, *args, **kwargs):
     
-    comment = get_model().objects.select_related('content_type').get(pk=from_comment_pk)     
+    try:
+        comment = get_model().objects.select_related('content_type').get(pk=from_comment_pk)
+    except get_model().DoesNotExist:
+        raise Http404
     
     cutoff_level = comment.level + getattr(settings, 'MPTT_COMMENTS_CUTOFF', 3)
     bottom_level = not include_ancestors and (comment.level - (include_self and 1 or 0)) or 0
